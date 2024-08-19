@@ -27,4 +27,9 @@ class Product extends Model
     {
         return $this->hasMany(Review::class, 'product_id');
     }
+
+    public function batches()
+    {
+        return $this->hasMany(Batch::class, 'product_id', 'product_id');
+    }
 }

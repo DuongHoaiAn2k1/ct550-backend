@@ -87,7 +87,7 @@ class OrderController extends Controller
             $customMessage = [
                 'bill_id.required' => 'Mã đơn hàng không được để trống.',
                 'status.required' => 'Mã trạng thái không được để trống.',
-                'paid.required' =>  'Trạng thái thanh toán không được để trống',
+                // 'paid.required' =>  'Trạng thái thanh toán không được để trống',
                 'shipping_fee.required' => "Phí ship không được để trống",
                 'total_cost.required' => 'Tổng giá tiền không được để trống'
             ];
@@ -95,7 +95,7 @@ class OrderController extends Controller
             $validate = Validator::make($request->all(), [
                 'bill_id' => 'required',
                 'status' => 'required',
-                'paid' => 'required',
+                // 'paid' => 'required',
                 'shipping_fee' => 'required',
                 'total_cost' => 'required'
             ], $customMessage);
@@ -122,7 +122,7 @@ class OrderController extends Controller
                 ];
                 $order->order_address = json_encode($order_address);
 
-                $order->paid = $request->paid;
+                // $order->paid = $request->paid;
                 $order->shipping_fee = $request->shipping_fee;
                 $order->total_cost = $request->total_cost;
                 $order->point_used_order = $request->point_used_order;

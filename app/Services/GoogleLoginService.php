@@ -41,6 +41,7 @@ class GoogleLoginService
                     'avatar' => $googleUser->avatar,
                     'password' => bcrypt(Str::random(16)), // Tạo mật khẩu ngẫu nhiên cho người dùng mới
                 ]);
+                $user->assignRole('normal_user');
 
                 event(new UserRegistered());
             }

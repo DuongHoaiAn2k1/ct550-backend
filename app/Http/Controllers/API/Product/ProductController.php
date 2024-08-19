@@ -242,7 +242,7 @@ class ProductController extends Controller
             'product_des.require' => 'Chi tiết sản phẩm không được để trống',
             'category_id.required' => 'Danh mục không được để trống',
             'product_price.require' => 'Giá sản phẩm không được để trống',
-            'product_quantiy.required' => 'Số lượng sản phẩm không được để trống',
+            'weight.required' => 'Khối lượng không được để trống',
 
         ];
 
@@ -252,7 +252,7 @@ class ProductController extends Controller
             'product_des' => 'required',
             'category_id' => 'required',
             'product_price' => 'required',
-            'product_quantity' => 'required'
+            'weight' => 'required',
         ], $customMessage);
 
         if ($validator->fails()) {
@@ -281,7 +281,7 @@ class ProductController extends Controller
                     $product->product_des = $request->product_des;
                     $product->category_id = $request->category_id;
                     $product->product_price = $request->product_price;
-                    $product->product_quantity = $request->product_quantity;
+                    $product->weight = $request->weight;
                     $product->save();
 
                     return response()->json([
@@ -306,7 +306,8 @@ class ProductController extends Controller
             'product_des.required' => 'Chi tiết sản phẩm không được để trống',
             'category_id.required' => 'Danh mục không được để trống',
             'product_price.required' => 'Giá sản phẩm không được để trống',
-            'product_quantiy.required' => 'Số lượng sản phẩm không được để trống',
+            'weight.required' => 'Khối lượng không được để trống',
+
         ];
 
         $validator = Validator::make($request->all(), [
@@ -314,7 +315,7 @@ class ProductController extends Controller
             'product_des' => 'required',
             'category_id' => 'required',
             'product_price' => 'required',
-            'product_quantity' => 'required'
+            'weight' => 'required',
         ], $customMessage);
 
         if ($validator->fails()) {
@@ -327,12 +328,12 @@ class ProductController extends Controller
         } else {
             try {
                 $existProduct = Product::where('product_name', $request->product_name)
-                    ->where('product_id', '<>', $product_id)
+                    ->where('product_id', $product_id)
                     ->first();
-                if ($existProduct) {
+                if (!$existProduct) {
                     return response()->json([
                         'status' => 'error',
-                        'message' => 'Sản phẩm đã tồn tại'
+                        'message' => 'Sản phẩm không tồn tại'
                     ], 422);
                 } else {
                     $product = Product::find($product_id);
@@ -357,7 +358,7 @@ class ProductController extends Controller
                     $product->product_des = $request->product_des;
                     $product->category_id = $request->category_id;
                     $product->product_price = $request->product_price;
-                    $product->product_quantity = $request->product_quantity;
+                    $product->weight = $request->weight;
                     $product->save();
 
                     return response()->json([
@@ -368,7 +369,8 @@ class ProductController extends Controller
             } catch (\Exception $e) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => $e->getMessage()
+                    'message' => $e->getMessage(),
+                    'request' => $request->all()
                 ], 500);
             }
         }

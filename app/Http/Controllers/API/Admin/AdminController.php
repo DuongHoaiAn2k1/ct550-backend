@@ -33,6 +33,8 @@ class AdminController extends Controller
                 'password' => bcrypt($request->password),
             ]);
 
+            $user->assignRole('admin');
+
             return response()->json([
                 'status' => 'success',
                 'data' => $user

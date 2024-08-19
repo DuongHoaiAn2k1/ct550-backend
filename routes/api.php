@@ -6,12 +6,15 @@ use App\Http\Controllers\API\Auth\AuthController;
 use App\Http\Controllers\API\Cart\CartController;
 use App\Http\Controllers\API\User\UserController;
 use App\Http\Controllers\API\Admin\AdminController;
+use App\Http\Controllers\API\Batch\BatchController;
 use App\Http\Controllers\API\Order\OrderController;
 use App\Http\Controllers\API\Review\ReviewController;
 use App\Http\Controllers\API\Product\ProductController;
 use App\Http\Controllers\API\Category\CategoryController;
 use App\Http\Controllers\API\Favorite\FavoriteController;
 use App\Http\Controllers\API\Order\OrderDetailController;
+use App\Http\Controllers\API\Product\ProductBatchController;
+use App\Http\Controllers\API\Role\RolePermissionController;
 
 
 /*
@@ -47,6 +50,7 @@ Route::group([
 
 Route::prefix('/user')->group(function () {
     Route::get('/list-user', [UserController::class, 'getListUser']);
+    Route::get('list-user/{role}', [UserController::class, 'getListUsersByRole']);
     Route::get('/', [UserController::class, 'getAll']);
     Route::get('/{id}', [UserController::class, 'index']);
     Route::patch('/update', [UserController::class, 'update']);
@@ -91,6 +95,10 @@ Route::prefix('/product')->group(function () {
     Route::post('/condition/list/product', [ProductController::class, 'getProductByCondition']);
     Route::patch('/{id}', [ProductController::class, 'updateQuantity']);
     Route::get('/review/list', [ProductController::class, 'getProductsWithReviews']);
+
+    Route::prefix('/batch')->group(function () {
+        Route::get('/list', [ProductBatchController::class, 'index']);
+    });
 });
 
 Route::prefix('/cart')->group(function () {
@@ -143,4 +151,60 @@ Route::prefix('/review')->group(function () {
     Route::post('/', [ReviewController::class, 'create']);
     Route::post('/check/{id}', [ReviewController::class, 'userHasReviewedProduct']);
     Route::delete('/{id}', [ReviewController::class, 'delete']);
+});
+
+Route::prefix('/assign-role')->group(function () {
+    Route::get('/', [RolePermissionController::class, 'index']);
+    Route::get('/roles', [RolePermissionController::class, 'getRoles']);
+    Route::get('/permissions', [RolePermissionController::class, 'getPermissions']);
+    Route::post('/roles', [RolePermissionController::class, 'createRole']);
+    Route::patch('/roles/{role}', [RolePermissionController::class, 'updateRole']);
+    Route::delete('/roles/{role}', [RolePermissionController::class, 'deleteRole']);
+    Route::post('/permissions', [RolePermissionController::class, 'createPermission']);
+    Route::patch('/permissions/{permission}', [RolePermissionController::class, 'updatePermission']);
+    Route::delete('/permissions/{permission}', [RolePermissionController::class, 'deletePermission']);
+    Route::get('/roles/{role}/permissions', [RolePermissionController::class, 'getPermissionsByRole']);
+    Route::get('roles/name/{name}/permissions', [RolePermissionController::class, 'getPermissionsByRoleName']);
+    Route::patch('/roles/{role}/permissions', [RolePermissionController::class, 'updatePermissionsForRole']);
+});
+
+Route::prefix('batches')->group(function () {
+    Route::get('/', [BatchController::class, 'index']);
+    Route::get('/{batch_id}', [BatchController::class, 'show']);
+    Route::post('/', [BatchController::class, 'create']);
+    Route::put('/{batch_id}', [BatchController::class, 'update']);
+    Route::delete('/{batch_id}', [BatchController::class, 'destroy']);
+});
+
+// Route::middleware(['auth:api', 'role:admin|staff|normal_user'])->prefix('/assign-role')->group(function () {
+//     Route::get('/', [RolePermissionController::class, 'index']);
+//     Route::get('/roles', [RolePermissionController::class, 'getRoles']);
+//     Route::get('/permissions', [RolePermissionController::class, 'getPermissions']);
+//     Route::post('/roles', [RolePermissionController::class, 'createRole']);
+//     Route::patch('/roles/{role}', [RolePermissionController::class, 'updateRole']);
+//     Route::delete('/roles/{role}', [RolePermissionController::class, 'deleteRole']);
+//     Route::post('/permissions', [RolePermissionController::class, 'createPermission']);
+//     Route::patch('/permissions/{permission}', [RolePermissionController::class, 'updatePermission']);
+//     Route::delete('/permissions/{permission}', [RolePermissionController::class, 'deletePermission']);
+//     Route::get('/roles/{role}/permissions', [RolePermissionController::class, 'getPermissionsByRole']);
+//     Route::get('roles/name/{name}/permissions', [RolePermissionController::class, 'getPermissionsByRoleName']);
+//     Route::patch('/roles/{role}/permissions', [RolePermissionController::class, 'updatePermissionsForRole']);
+// });
+
+
+
+//Example ::
+Route::middleware(['auth:sanctum', 'role:admin|staff'])->group(function () {
+
+    // Route mà cả admin và staff đều có thể truy cập, nhưng cần quyền view dashboard
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->middleware('permission:view dashboard');
+
+    // Route này yêu cầu quyền manage products
+    Route::post('/product', [ProductController::class, 'create'])
+        ->middleware('permission:manage products');
+
+    // Route này yêu cầu quyền delete orders
+    Route::delete('/order/{id}', [OrderController::class, 'delete'])
+        ->middleware('permission:delete orders');
 });

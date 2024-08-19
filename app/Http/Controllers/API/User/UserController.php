@@ -5,9 +5,9 @@ namespace App\Http\Controllers\API\User;
 use App\Models\User;
 use App\Mail\OtpMail;
 use App\Rules\HasChar;
-use App\Events\User\UserRegistered;
 use Illuminate\Http\Request;
 use PhpParser\Node\Stmt\TryCatch;
+use App\Events\User\UserRegistered;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redis;
@@ -63,6 +63,7 @@ class UserController extends Controller
                             $user->name = $request->name;
                             $user->email = $request->email;
                             $user->password = bcrypt($request->password);
+                            $user->assignRole('normal_user');
                             $user->save();
 
                             event(new UserRegistered());
@@ -111,15 +112,18 @@ class UserController extends Controller
         }
     }
 
-    public function getListUser(){
-        try{
-            $listUser = User::where('roles', '<>', 'admin')->where('roles', '<>', 'super_admin')->get();
+    public function getListUser()
+    {
+        try {
+            $listUser = User::role(['normal_user', 'loyal_customer'])->get();
+            $listUser->each(function ($user) {
+                $user->role = $user->getRoleNames()->first();
+            });
             return response()->json([
                 'status' => 'success',
                 'message' => 'Fetch list user successfully',
                 'data' => $listUser
             ], 200);
-        
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
@@ -128,6 +132,25 @@ class UserController extends Controller
         }
     }
 
+    public function getListUsersByRole($role)
+    {
+        try {
+            $listUser = User::role($role)->get();
+            $listUser->each(function ($user) {
+                $user->role = $user->getRoleNames()->first();
+            });
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Fetch list user successfully',
+                'data' => $listUser
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
     public function getAll()
     {
         try {
@@ -172,7 +195,7 @@ class UserController extends Controller
                 'name' => 'required',
                 'phone' => 'required',
                 'city' => 'required',
-                'name' => 'required',
+                'commue' => 'required',
                 'district' => 'required',
                 'address' => 'required',
             ], $customerMessages);
@@ -191,13 +214,20 @@ class UserController extends Controller
             $userAddresses = json_decode($user->address, true) ?? [];
 
             $userAddresses[] = $data;
-
-            $user->update([
-                'address' => json_encode($userAddresses)
-            ]);
+            $user->address = $userAddresses;
+            $user->save();
+            // DB::table('users')
+            //     ->where('id', $userId)
+            //     ->update(['address' => json_encode($userAddresses)]);
+            // $user->update([
+            //     'address' => json_encode($userAddresses)
+            // ]);
             return response()->json([
                 'status' => 'success',
-                'message' => 'Thêm địa chỉ thành công'
+                'message' => 'Thêm địa chỉ thành công',
+                'data' => $data,
+                'userAddresses' => $userAddresses,
+                'user' => $user
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -283,7 +313,7 @@ class UserController extends Controller
         }
     }
 
-    public function deleteAddress(Request $request, $index)
+    public function deleteAddress($index)
     {
         try {
             $userId = auth()->user()->id;
@@ -299,10 +329,11 @@ class UserController extends Controller
 
             array_splice($userAddresses, $index, 1);
 
-            $user->update([
-                'address' => json_encode($userAddresses)
-            ]);
-
+            // $user->update([
+            //     'address' => json_encode($userAddresses)
+            // ]);
+            $user->address = $userAddresses;
+            $user->save();
             return response()->json([
                 'status' => 'success',
                 'message' => 'Đã xóa địa chỉ thành công'

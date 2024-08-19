@@ -17,7 +17,7 @@ class AuthController extends Controller
     protected $facebookLoginService;
     public function __construct(GoogleLoginService $googleLoginService, FacebookLoginService $facebookLoginService)
     {
-        $this->middleware('auth:api', ['except' => ['login', 'refresh', 'checkRefreshTokenExpiration', 'redirectToGoogle', 'handleGoogleCallback', 'redirectToFacebook', 'handleFacebookCallback', 'me']]);
+        $this->middleware('auth:api', ['except' => ['login', 'refresh', 'checkRefreshTokenExpiration', 'redirectToGoogle', 'handleGoogleCallback', 'redirectToFacebook', 'handleFacebookCallback', 'me', 'check']]);
         $this->googleLoginService = $googleLoginService;
         $this->facebookLoginService = $facebookLoginService;
     }
@@ -84,9 +84,6 @@ class AuthController extends Controller
                 }
                 $user_id = auth()->user()->id;
 
-                if (auth()->user()->roles != 'super_admin' && auth()->user()->roles != 'admin' && auth()->user()->roles != 'support') {
-                    return response()->json(['error' => 'You do not have permission to login'], 442);
-                }
                 $refreshToken = $this->createRefreshToken();
                 return $this->respondWithToken($token, $refreshToken, $user_id);
             }
@@ -129,17 +126,16 @@ class AuthController extends Controller
                     "message" => "User Invalid"
                 ], 404);
             }
-            $accessToken = $request->bearerToken();
-            if ($accessToken) {
-                try {
-                    JWTAuth::setToken($accessToken);
-                    $payload = JWTAuth::getPayload();
-                    auth()->invalidate();
-                } catch (TokenExpiredException $e) {
-                } catch (JWTException $e) {
-                    return response()->json(['message' => $e->getMessage()], 500);
-                }
-            }
+            // $accessToken = $request->bearerToken();
+            // if ($accessToken) {
+            //     try {
+            //         JWTAuth::setToken($accessToken);
+            //         $payload = JWTAuth::getPayload();
+            //         auth()->invalidate();
+            //     } catch (JWTException $e) {
+            //         return response()->json(['message' => $e->getMessage()], 500);
+            //     }
+            // }
 
             // auth()->invalidate();
             $token = auth()->login($user);

@@ -12,6 +12,11 @@ class OrderDetail extends Model
     protected $table = 'order_detail';
     protected $primaryKey = 'order_detail_id';
 
+    public function batch()
+    {
+        return $this->belongsTo(Batch::class, 'batch_id');
+    }
+
     public function order()
     {
         return $this->belongsTo(Order::class, 'order_id');
