@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API\Order;
 
+use App\Models\Batch;
 use App\Models\OrderDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -33,17 +34,17 @@ class OrderDetailController extends Controller
         try {
             $customMessage = [
                 'quantity.required' => 'Số lượng không được để trống.',
-                'order_id' => 'Mã đơn hàng không được để trống.',
-                'product_id' => 'Id sản phẩm không được để trống.',
-                'total_cost_detail' => 'Tổng tiền không được để trống.'
-
+                'order_id.required' => 'Mã đơn hàng không được để trống.',
+                'product_id.required' => 'Id sản phẩm không được để trống.',
+                'total_cost_detail.required' => 'Tổng tiền không được để trống.'
             ];
 
             $validate = Validator::make($request->all(), [
                 'quantity' => 'required',
                 'product_id' => 'required',
                 'order_id' => 'required',
-                'total_cost_detail' => 'required'
+                'total_cost_detail' => 'required',
+                'batch_details' => 'required|array'
             ], $customMessage);
 
             if ($validate->fails()) {
@@ -54,17 +55,38 @@ class OrderDetailController extends Controller
                     'error' => $errors
                 ], 422);
             } else {
-                $orderDetail = new OrderDetail();
-                $orderDetail->quantity = $request->quantity;
-                $orderDetail->order_id = $request->order_id;
-                $orderDetail->product_id = $request->product_id;
-                $orderDetail->total_cost_detail = $request->total_cost_detail;
-                $orderDetail->save();
+                DB::beginTransaction();
 
-                return response()->json([
-                    'status' => 'success',
-                    'messageg' => 'Tạo chi tiết đơn hàng thành công.'
-                ], 200);
+                try {
+                    $orderDetail = new OrderDetail();
+                    $orderDetail->quantity = $request->quantity;
+                    $orderDetail->order_id = $request->order_id;
+                    $orderDetail->product_id = $request->product_id;
+                    $orderDetail->total_cost_detail = $request->total_cost_detail;
+                    $orderDetail->save();
+
+                    foreach ($request->batch_details as $batchDetail) {
+                        DB::table('order_detail_batches')->insert([
+                            'order_detail_id' => $orderDetail->order_detail_id,
+                            'batch_id' => $batchDetail['batch_id'],
+                            'quantity' => $batchDetail['quantity'],
+                        ]);
+                    }
+
+                    DB::commit();
+
+                    return response()->json([
+                        'status' => 'success',
+                        'message' => 'Tạo chi tiết đơn hàng thành công.',
+                        'order_detail' => $orderDetail
+                    ], 200);
+                } catch (\Exception $e) {
+                    DB::rollBack();
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => $e->getMessage()
+                    ], 500);
+                }
             }
         } catch (\Exception $e) {
             return response()->json([
@@ -73,6 +95,7 @@ class OrderDetailController extends Controller
             ], 500);
         }
     }
+
 
     public function sales_statistics()
     {
@@ -119,6 +142,45 @@ class OrderDetailController extends Controller
                 ], 404);
             }
         } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function revertStock($order_id)
+    {
+        DB::beginTransaction(); // Bắt đầu giao dịch
+
+        try {
+            $orderDetails = OrderDetail::where('order_id', $order_id)->get();
+
+            foreach ($orderDetails as $orderDetail) {
+                $orderDetailBatches = DB::table('order_detail_batches')
+                    ->where('order_detail_id', $orderDetail->order_detail_id)
+                    ->get();
+
+                foreach ($orderDetailBatches as $orderDetailBatch) {
+                    $batch = Batch::find($orderDetailBatch->batch_id);
+
+                    if ($batch) {
+                        $batch->quantity += $orderDetailBatch->quantity;
+                        $batch->sold_quantity -= $orderDetailBatch->quantity;
+                        $batch->save();
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Stock reverted successfully for the cancelled order.'
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
             return response()->json([
                 'status' => 'error',
                 'message' => $e->getMessage()

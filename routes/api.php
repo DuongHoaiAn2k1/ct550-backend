@@ -135,6 +135,7 @@ Route::prefix('/orderDetail')->group(function () {
     Route::post('/', [OrderDetailController::class, 'create']);
     Route::get('/statistics/sales', [OrderDetailController::class, 'sales_statistics']);
     Route::post('/check/user/{id}', [OrderDetailController::class, 'checkUserPurchasedProduct']);
+    Route::post('/order/{id}', [OrderDetailController::class, 'revertStock']);
 });
 
 
@@ -153,7 +154,7 @@ Route::prefix('/review')->group(function () {
     Route::delete('/{id}', [ReviewController::class, 'delete']);
 });
 
-Route::prefix('/assign-role')->group(function () {
+Route::middleware(['auth:api', 'role:admin|staff|normal_user'])->prefix('/assign-role')->group(function () {
     Route::get('/', [RolePermissionController::class, 'index']);
     Route::get('/roles', [RolePermissionController::class, 'getRoles']);
     Route::get('/permissions', [RolePermissionController::class, 'getPermissions']);
@@ -172,8 +173,9 @@ Route::prefix('batches')->group(function () {
     Route::get('/', [BatchController::class, 'index']);
     Route::get('/{batch_id}', [BatchController::class, 'show']);
     Route::post('/', [BatchController::class, 'create']);
-    Route::put('/{batch_id}', [BatchController::class, 'update']);
+    Route::patch('/{batch_id}', [BatchController::class, 'update']);
     Route::delete('/{batch_id}', [BatchController::class, 'destroy']);
+    Route::post('/reduce/product', [BatchController::class, 'reduceStock']);
 });
 
 // Route::middleware(['auth:api', 'role:admin|staff|normal_user'])->prefix('/assign-role')->group(function () {
@@ -194,17 +196,17 @@ Route::prefix('batches')->group(function () {
 
 
 //Example ::
-Route::middleware(['auth:sanctum', 'role:admin|staff'])->group(function () {
+// Route::middleware(['auth:sanctum', 'role:admin|staff'])->group(function () {
 
-    // Route mà cả admin và staff đều có thể truy cập, nhưng cần quyền view dashboard
-    Route::get('/dashboard', [DashboardController::class, 'index'])
-        ->middleware('permission:view dashboard');
+//     // Route mà cả admin và staff đều có thể truy cập, nhưng cần quyền view dashboard
+//     Route::get('/dashboard', [DashboardController::class, 'index'])
+//         ->middleware('permission:view dashboard');
 
-    // Route này yêu cầu quyền manage products
-    Route::post('/product', [ProductController::class, 'create'])
-        ->middleware('permission:manage products');
+//     // Route này yêu cầu quyền manage products
+//     Route::post('/product', [ProductController::class, 'create'])
+//         ->middleware('permission:manage products');
 
-    // Route này yêu cầu quyền delete orders
-    Route::delete('/order/{id}', [OrderController::class, 'delete'])
-        ->middleware('permission:delete orders');
-});
+//     // Route này yêu cầu quyền delete orders
+//     Route::delete('/order/{id}', [OrderController::class, 'delete'])
+//         ->middleware('permission:delete orders');
+// });

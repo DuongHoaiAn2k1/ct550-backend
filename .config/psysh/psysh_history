@@ -1,0 +1,56 @@
+$ten_days_from_now = now()->addDays(15);
+$batches = \App\Models\Batch::where('product_id', $product_id)
+            ->where('expiry_date', '>', $ten_days_from_now)
+            ->orderBy('entry_date', 'asc')
+            ->get();
+dd($batches);
+$ten_days_from_now = now()->addDays(15);
+$batches = \App\Models\Batch::where('product_id', 7)
+            ->where('expiry_date', '>', $ten_days_from_now)
+            ->orderBy('entry_date', 'asc')
+            ->get();
+dd($batches);
+$ten_days_from_now = now()->addDays(15);
+$batches = \App\Models\Batch::where('product_id', $product_id)
+            ->where('expiry_date', '>', $ten_days_from_now)
+            ->orderBy('entry_date', 'asc')
+            ->get();
+dd($batches);
+$batch = \App\Models\Batch::find(7); // Thay đổi ID phù hợp
+$batch->quantity -= 1; // Giảm số lượng để kiểm tra
+$batch->save();
+$batch = \App\Models\Batch::find(2); // Thay đổi ID phù hợp
+$batch->quantity -= 1; // Giảm số lượng để kiểm tra
+$batch->save();
+$batches = Batch::where('product_id', $product_id)
+                ->where('expiry_date', '>', $date_threshold)
+                ->orderBy('entry_date', 'asc')
+                ->lockForUpdate()
+                ->get();
+$batches = Batch::where('product_id', 7)
+                ->where('expiry_date', '>', $date_threshold)
+                ->orderBy('entry_date', 'asc')
+                ->lockForUpdate()
+                ->get();
+            dd($batches);
+$batches = Batch::where('product_id', $product_id)
+                ->where('expiry_date', '>', $date_threshold)
+                ->orderBy('entry_date', 'asc')
+                ->lockForUpdate()
+                ->get();
+            dd($batches);
+$date_threshold = now()->addDays(15);
+            $batches = Batch::where('product_id', $product_id)
+                ->where('expiry_date', '>', $date_threshold)
+                ->orderBy('entry_date', 'asc')
+                ->lockForUpdate()
+                ->get();
+            dd($batches);
+$date_threshold = now()->addDays(15);
+
+            $batches = Batch::where('product_id', 7)
+                ->where('expiry_date', '>', $date_threshold)
+                ->orderBy('entry_date', 'asc')
+                ->lockForUpdate()
+                ->get();
+            dd($batches);

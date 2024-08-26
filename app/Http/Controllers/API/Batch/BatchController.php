@@ -4,6 +4,8 @@ namespace App\Http\Controllers\API\Batch;
 
 use App\Models\Batch;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Jobs\ReduceProductQuantity;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 
@@ -35,7 +37,7 @@ class BatchController extends Controller
     public function index()
     {
         try {
-            $batches = Batch::with('product')->get();
+            $batches = Batch::with('product')->with('user')->get();
 
             return response()->json([
                 'status' => 'success',
@@ -61,8 +63,8 @@ class BatchController extends Controller
         $validator = Validator::make($request->all(), [
             'product_id' => 'required|exists:products,product_id',
             'quantity' => 'required|integer|min:1',
-            'entry_date' => 'required|date',
-            'expiry_date' => 'required|date|after_or_equal:entry_date',
+            'entry_date' => 'required',
+            'expiry_date' => 'required',
             'batch_cost' => 'required|integer|min:0',
         ], $customMessage);
 
@@ -170,6 +172,90 @@ class BatchController extends Controller
                 'message' => 'Deleted batch successfully'
             ], 200);
         } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function reduceStock(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'product_id' => 'required|exists:products,product_id',
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $product_id = $request->product_id;
+            $quantity_to_reduce = $request->quantity;
+
+            $date_threshold = now()->addDays(15);
+
+            $batches = Batch::where('product_id', $product_id)
+                ->where('expiry_date', '>', $date_threshold)
+                ->orderBy('entry_date', 'asc')
+                ->lockForUpdate()
+                ->get();
+
+
+            $batchDetails = [];
+
+            foreach ($batches as $batch) {
+                if ($quantity_to_reduce <= 0) {
+                    break;
+                }
+
+                if ($batch->quantity >= $quantity_to_reduce) {
+                    $batch->quantity -= $quantity_to_reduce;
+                    $batch->sold_quantity += $quantity_to_reduce;
+                    $batch->save();
+
+                    $batchDetails[] = [
+                        'batch_id' => $batch->batch_id,
+                        'quantity' => $quantity_to_reduce
+                    ];
+                    $quantity_to_reduce = 0;
+                } else {
+                    $quantity_to_reduce -= $batch->quantity;
+
+                    $batchDetails[] = [
+                        'batch_id' => $batch->batch_id,
+                        'quantity' => $batch->quantity
+                    ];
+                    $batch->sold_quantity += $batch->quantity;
+                    $batch->quantity = 0;
+                    $batch->save();
+                }
+            }
+
+            if ($quantity_to_reduce > 0) {
+                DB::rollBack();
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Not enough stock to reduce the requested quantity'
+                ], 400);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Reduced stock successfully',
+                'batchDetails' => $batchDetails
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'status' => 'error',
                 'message' => $e->getMessage()

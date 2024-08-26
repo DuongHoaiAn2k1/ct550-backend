@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API\Order;
 
 use App\Models\Order;
 use Illuminate\Http\Request;
+use App\Events\Order\OrderCreated;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
@@ -128,13 +129,7 @@ class OrderController extends Controller
                 $order->point_used_order = $request->point_used_order;
                 $order->save();
                 $order_id = $order->order_id;
-                // $successResponse = [
-                //     'status' => 'success',
-                //     'data' => $request->all(),
-                //     'order_id' => $order_id,
-                //     'message' => 'Tạo đơn hàng thành công'
-                // ];
-                // $response = Http::post('http://localhost:3002/', $successResponse);
+                event(new OrderCreated());
                 return response()->json([
                     'status' => 'success',
                     'data' => $request->all(),
