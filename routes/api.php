@@ -12,6 +12,7 @@ use App\Http\Controllers\API\Review\ReviewController;
 use App\Http\Controllers\API\Product\ProductController;
 use App\Http\Controllers\API\Category\CategoryController;
 use App\Http\Controllers\API\Favorite\FavoriteController;
+use App\Http\Controllers\API\Notification\NotificationController;
 use App\Http\Controllers\API\Order\OrderDetailController;
 use App\Http\Controllers\API\Product\ProductBatchController;
 use App\Http\Controllers\API\Role\RolePermissionController;
@@ -176,6 +177,15 @@ Route::prefix('batches')->group(function () {
     Route::patch('/{batch_id}', [BatchController::class, 'update']);
     Route::delete('/{batch_id}', [BatchController::class, 'destroy']);
     Route::post('/reduce/product', [BatchController::class, 'reduceStock']);
+});
+
+Route::prefix('notification')->group(function () {
+    Route::get('/', [NotificationController::class, 'getAll']);
+    Route::get('/user', [NotificationController::class, 'getByUser']);
+    Route::post('/', [NotificationController::class, 'create']);
+    Route::delete('/{id}', [NotificationController::class, 'delete']);
+    Route::get('/admin/{type}', [NotificationController::class, 'getByAdminType']);
+    Route::post('/admin/read/all', [NotificationController::class, 'adminReadAll']);
 });
 
 // Route::middleware(['auth:api', 'role:admin|staff|normal_user'])->prefix('/assign-role')->group(function () {
