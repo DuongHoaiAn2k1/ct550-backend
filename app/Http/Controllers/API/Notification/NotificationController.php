@@ -16,11 +16,12 @@ class NotificationController extends Controller
             $user_id = auth()->user()->id;
 
             $notification = new Notification();
-            $listData = $notification->get()->where('user_id', $user_id);
-
+            $listData = $notification->where('user_id', $user_id)->orderBy('created_at', 'desc')->limit(20)->get();
+            $count_unread = $notification->where('is_user_read', false)->count();
             return response()->json([
                 'status' => 'success',
-                'data' => $listData
+                'data' => $listData,
+                'count_unread' => $count_unread
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -137,6 +138,29 @@ class NotificationController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'Update admin read all'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => $e->getMessage()
+                ],
+                500
+            );
+        }
+    }
+
+    public function userReadAll()
+    {
+        try {
+            $notifications = Notification::where('is_user_read', false)->get();
+            foreach ($notifications as $item) {
+                $item->is_user_read = true;
+                $item->save();
+            }
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Update user read all'
             ], 200);
         } catch (\Exception $e) {
             return response()->json(
