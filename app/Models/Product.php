@@ -32,4 +32,9 @@ class Product extends Model
     {
         return $this->hasMany(Batch::class, 'product_id', 'product_id');
     }
+
+    public function product_promotion()
+    {
+        return $this->hasMany(ProductPromotion::class, 'product_id');
+    }
 }

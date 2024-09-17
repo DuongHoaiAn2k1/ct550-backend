@@ -242,7 +242,7 @@ class BatchController extends Controller
             if ($quantity_to_reduce > 0) {
                 DB::rollBack();
                 return response()->json([
-                    'status' => 'error',
+                    'status' => 'not_enough_stock',
                     'message' => 'Not enough stock to reduce the requested quantity'
                 ], 400);
             }
@@ -261,5 +261,46 @@ class BatchController extends Controller
                 'message' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function checkStockAvailability(Request $request)
+    {
+        $products = $request->input('products', []); // Mảng sản phẩm từ request
+
+        $results = [];
+
+        foreach ($products as $product) {
+            $product_id = $product['product_id'];
+            $required_quantity = $product['quantity'];
+
+            $total_available_quantity = Batch::where('product_id', $product_id)
+                ->where('expiry_date', '>', now()->addDays(15)) // Chỉ tính các lô hàng có hạn sử dụng trên 15 ngày
+                ->sum('quantity');
+
+            if ($total_available_quantity < $required_quantity) {
+                // Nếu tổng số lượng có sẵn nhỏ hơn số lượng yêu cầu, thêm vào mảng kết quả
+                $results[] = [
+                    'product_id' => $product_id,
+                    'required_quantity' => $required_quantity,
+                    'available_quantity' => $total_available_quantity,
+                    'status' => 'not_enough_stock'
+                ];
+            }
+        }
+
+        if (count($results) > 0) {
+            // Nếu có sản phẩm không đủ số lượng, trả về chi tiết
+            return response()->json([
+                'status' => 'Not enough stock',
+                'message' => 'Some products do not have enough stock',
+                'details' => $results
+            ], 400);
+        }
+
+        // Nếu tất cả sản phẩm đều đủ số lượng
+        return response()->json([
+            'status' => 'success',
+            'message' => 'All products have enough stock'
+        ], 200);
     }
 }

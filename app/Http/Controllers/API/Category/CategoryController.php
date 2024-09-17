@@ -72,6 +72,11 @@ class CategoryController extends Controller
                 } else {
                     $category = new Category();
                     $category->category_name = $request->category_name;
+
+                    if ($request->hasFile('image')) {
+                        $imagePath = $request->file('image')->store('uploads', 'public');
+                        $category->image = $imagePath;
+                    }
                     $category->save();
 
                     return response()->json([

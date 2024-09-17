@@ -8,14 +8,20 @@ use App\Http\Controllers\API\User\UserController;
 use App\Http\Controllers\API\Admin\AdminController;
 use App\Http\Controllers\API\Batch\BatchController;
 use App\Http\Controllers\API\Order\OrderController;
+use App\Http\Controllers\API\Payment\VNPayController;
 use App\Http\Controllers\API\Review\ReviewController;
+use App\Http\Controllers\API\Message\MessageController;
 use App\Http\Controllers\API\Product\ProductController;
 use App\Http\Controllers\API\Category\CategoryController;
 use App\Http\Controllers\API\Favorite\FavoriteController;
-use App\Http\Controllers\API\Notification\NotificationController;
 use App\Http\Controllers\API\Order\OrderDetailController;
-use App\Http\Controllers\API\Product\ProductBatchController;
+use App\Http\Controllers\API\Shipping\ShippingController;
+use App\Http\Controllers\API\Promotion\PromotionController;
 use App\Http\Controllers\API\Role\RolePermissionController;
+use App\Http\Controllers\API\Product\ProductBatchController;
+use App\Http\Controllers\API\Refund\RefundRequestController;
+use App\Http\Controllers\API\Notification\NotificationController;
+use App\Http\Controllers\API\Promotion\ProductPromotionController;
 
 
 /*
@@ -37,7 +43,7 @@ Route::group([
     'middleware' => 'api',
     'prefix' => 'auth'
 ], function ($router) {
-    Route::post('login', [AuthController::class, 'login']);
+    Route::post('/login', [AuthController::class, 'login']);
     Route::post('adminLogin', [AuthController::class, 'adminLogin']);
     Route::post('logout', [AuthController::class, 'logout']);
     Route::post('refresh', [AuthController::class, 'refresh']);
@@ -54,7 +60,7 @@ Route::prefix('/user')->group(function () {
     Route::get('list-user/{role}', [UserController::class, 'getListUsersByRole']);
     Route::get('/', [UserController::class, 'getAll']);
     Route::get('/{id}', [UserController::class, 'index']);
-    Route::patch('/update', [UserController::class, 'update']);
+    Route::post('/update', [UserController::class, 'update']);
     Route::patch('/password', [UserController::class, 'update_pass']);
     Route::delete('/{id}', [UserController::class, 'delete_user']);
     Route::post('/register', [UserController::class, 'register']);
@@ -65,10 +71,14 @@ Route::prefix('/user')->group(function () {
     Route::get('/point/get', [UserController::class, 'getCurrentPoint']);
     Route::patch('/point/restore', [UserController::class, 'restorePoint']);
     Route::post("/filter/users", [UserController::class, 'filter_users']);
+    Route::get('/role/user/get-list', [UserController::class, 'getListUserWithRole']);
 });
 
 Route::prefix('/admin')->group(function () {
     Route::post('/register', [AdminController::class, 'register']);
+    Route::post('/create-staff', [AdminController::class, 'createStaff']);
+    Route::get('/staff', [AdminController::class, 'getListStaff']);
+    Route::delete('/staff/{id}', [AdminController::class, 'deleteStaff']);
 });
 
 Route::prefix('/category')->group(function () {
@@ -126,6 +136,7 @@ Route::prefix('/order')->group(function () {
     Route::get('/count/order', [OrderController::class, 'count']);
     Route::patch('/{id}', [OrderController::class, 'cancel']);
     Route::patch('update/{id}', [OrderController::class, 'update_status']);
+    Route::patch('bill/update/{id}', [OrderController::class, 'updateStatusByBillId']);
     Route::get('/get/order/user', [OrderController::class, 'list_user_order']);
     Route::post('/condition/list/order', [OrderController::class, 'getOrderByCondition']);
     Route::post('/condition/calculate/cost', [OrderController::class, 'calculateTotalCostAndShippingFee']);
@@ -177,6 +188,7 @@ Route::prefix('batches')->group(function () {
     Route::patch('/{batch_id}', [BatchController::class, 'update']);
     Route::delete('/{batch_id}', [BatchController::class, 'destroy']);
     Route::post('/reduce/product', [BatchController::class, 'reduceStock']);
+    Route::post('/check/product', [BatchController::class, 'checkStockAvailability']);
 });
 
 Route::prefix('notification')->group(function () {
@@ -186,7 +198,58 @@ Route::prefix('notification')->group(function () {
     Route::delete('/{id}', [NotificationController::class, 'delete']);
     Route::get('/admin/{type}', [NotificationController::class, 'getByAdminType']);
     Route::post('/admin/read/all', [NotificationController::class, 'adminReadAll']);
+    Route::post('/user/read/all', [NotificationController::class, 'userReadAll']);
 });
+
+
+Route::prefix('payment')->group(function () {
+    Route::post('/vnpay-payment', [VNPayController::class, 'createPayment']);
+    Route::post('/vnpay-return', [VNPayController::class, 'handleReturn']);
+    Route::get('/vnpay-ipn', [VNPayController::class, 'handleIPN']);
+});
+
+Route::prefix('refund')->group(function () {
+    Route::get('/', [RefundRequestController::class, 'getAll']);
+    Route::post('/', [RefundRequestController::class, 'create']);
+    Route::patch('/{id}', [RefundRequestController::class, 'updateStatus']);
+    Route::get('/today', [RefundRequestController::class, 'getToday']);
+    Route::post('/bydate/all', [RefundRequestController::class, 'getRefundsBetweenDates']);
+});
+
+
+Route::prefix('promotion')->group(function () {
+    Route::get('/', [PromotionController::class, 'index']);
+    Route::get('/detail/{id}', [PromotionController::class, 'getById']);
+    Route::post('/', [PromotionController::class, 'store']);
+    Route::patch('/{id}', [PromotionController::class, 'update']);
+    Route::delete('/{id}', [PromotionController::class, 'destroy']);
+    Route::post('/bydate/all', [PromotionController::class, 'getPromotionByDate']);
+    Route::post('/soft/delete/{id}', [PromotionController::class, 'softDelete']);
+});
+
+
+Route::prefix('product-promotions')->group(function () {
+    Route::get('/', [ProductPromotionController::class, 'index']);
+    Route::post('/', [ProductPromotionController::class, 'store']);
+    Route::patch('/{id}', [ProductPromotionController::class, 'update']);
+    Route::delete('/{id}', [ProductPromotionController::class, 'destroy']);
+    Route::get('/promotion/{id}', [ProductPromotionController::class, 'getByPromotion']);
+});
+
+
+Route::prefix('messages')->group(function () {
+    Route::get('/{id}', [MessageController::class, 'getUserMessages']);
+    Route::get('/all', [MessageController::class, 'getAllUserMessagesByRole']);
+    Route::post('/', [MessageController::class, 'store']);
+    Route::delete('/{id}', [MessageController::class, 'destroy']);
+    Route::get('/user/all', [MessageController::class, 'getUsersWithMessages']);
+});
+
+Route::prefix('/shipping')->group(function (): void {
+    Route::get('/', [ShippingController::class, 'getFee']);
+});
+
+
 
 // Route::middleware(['auth:api', 'role:admin|staff|normal_user'])->prefix('/assign-role')->group(function () {
 //     Route::get('/', [RolePermissionController::class, 'index']);

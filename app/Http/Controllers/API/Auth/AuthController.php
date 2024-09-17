@@ -120,12 +120,24 @@ class AuthController extends Controller
         $refreshToken = $request->refresh_Token;
         try {
             $decoded = JWTAuth::getJWTProvider()->decode($refreshToken);
-            $user = User::find($decoded['user_id']);
-            if (!$user) {
+            if (isset($decoded['exp']) && $decoded['exp'] > time()) {
+                $user = User::find($decoded['user_id']);
+                if (!$user) {
+                    return response()->json([
+                        "message" => "User Invalid"
+                    ], 404);
+                }
+
+                $token = auth()->login($user);
+                $refreshToken = $this->createRefreshToken();
+                return $this->respondWithToken($token, $refreshToken, $decoded['user_id']);
+            } else {
                 return response()->json([
-                    "message" => "User Invalid"
-                ], 404);
+                    "status" => "error",
+                    "message" => "Refresh token expired"
+                ], 417);
             }
+
             // $accessToken = $request->bearerToken();
             // if ($accessToken) {
             //     try {
@@ -138,9 +150,7 @@ class AuthController extends Controller
             // }
 
             // auth()->invalidate();
-            $token = auth()->login($user);
-            $refreshToken = $this->createRefreshToken();
-            return $this->respondWithToken($token, $refreshToken, $decoded['user_id']);
+
         } catch (JWTException $e) {
             return response()->json(['message' => $e->getMessage()], 500);
         }
@@ -153,6 +163,8 @@ class AuthController extends Controller
             'access_token' => $token,
             'refresh_token' => $refreshToken,
             'user_id' => $userId,
+            'email' => auth()->user()->email,
+            'role' => base64_encode(json_decode(auth()->user()->getRoleNames())[0]),
             'token_type' => 'bearer',
             'expires_in' => auth()->factory()->getTTL() * 60
         ]);
@@ -188,7 +200,9 @@ class AuthController extends Controller
             } else {
                 return response()->json([
                     'status' => 'success',
-                    'message' => "false"
+                    'message' => "false",
+                    'time' => $decoded['exp'],
+                    'curent_time' => time()
                 ]);
             }
         } catch (\Exception $e) {

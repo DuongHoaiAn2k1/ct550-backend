@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API\Order;
 
+use App\Models\User;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use App\Events\Order\OrderCreated;
@@ -88,7 +89,7 @@ class OrderController extends Controller
             $customMessage = [
                 'bill_id.required' => 'Mã đơn hàng không được để trống.',
                 'status.required' => 'Mã trạng thái không được để trống.',
-                // 'paid.required' =>  'Trạng thái thanh toán không được để trống',
+                'paid.required' =>  'Trạng thái thanh toán không được để trống',
                 'shipping_fee.required' => "Phí ship không được để trống",
                 'total_cost.required' => 'Tổng giá tiền không được để trống'
             ];
@@ -96,7 +97,7 @@ class OrderController extends Controller
             $validate = Validator::make($request->all(), [
                 'bill_id' => 'required',
                 'status' => 'required',
-                // 'paid' => 'required',
+                'paid' => 'required',
                 'shipping_fee' => 'required',
                 'total_cost' => 'required'
             ], $customMessage);
@@ -109,33 +110,64 @@ class OrderController extends Controller
                     'errors' => $errors
                 ], 422);
             } else {
-                $order = new Order();
-                $order->bill_id = $request->bill_id;
-                $order->status = $request->status;
-                $order->user_id = auth()->user()->id;
-                $order_address = [
-                    'address' => $request->address,
-                    'commue' => $request->commue,
-                    'district' => $request->district,
-                    'city' => $request->city,
-                    'phone' => $request->phone,
-                    'name' => $request->name
-                ];
-                $order->order_address = json_encode($order_address);
+                if (isset($request->pay_method) && $request->pay_method == "cod") {
+                    $order = new Order();
+                    $order->bill_id = $request->bill_id;
+                    $order->status = $request->status;
+                    $order->user_id = auth()->user()->id;
+                    $order_address = [
+                        'address' => $request->address,
+                        'commue' => $request->commue,
+                        'district' => $request->district,
+                        'city' => $request->city,
+                        'phone' => $request->phone,
+                        'name' => $request->name
+                    ];
+                    $order->order_address = json_encode($order_address);
 
-                // $order->paid = $request->paid;
-                $order->shipping_fee = $request->shipping_fee;
-                $order->total_cost = $request->total_cost;
-                $order->point_used_order = $request->point_used_order;
-                $order->save();
-                $order_id = $order->order_id;
-                event(new OrderCreated());
-                return response()->json([
-                    'status' => 'success',
-                    'data' => $request->all(),
-                    'order_id' => $order_id,
-                    'message' => 'Tạo đơn hàng thành công'
-                ], 201);
+                    $order->paid = $request->paid;
+                    $order->shipping_fee = $request->shipping_fee;
+                    $order->total_cost = $request->total_cost;
+                    $order->point_used_order = $request->point_used_order;
+                    $order->save();
+                    $order_id = $order->order_id;
+                    event(new OrderCreated());
+                    return response()->json([
+                        'status' => 'success',
+                        'data' => $request->all(),
+                        'order_id' => $order_id,
+                        'message' => 'Tạo đơn hàng thành công'
+                    ], 201);
+                } else {
+                    $order = new Order();
+                    $order->bill_id = $request->bill_id;
+                    $order->status = $request->status;
+                    $order->user_id = auth()->user()->id;
+                    $order_address = [
+                        'address' => $request->address,
+                        'commue' => $request->commue,
+                        'district' => $request->district,
+                        'city' => $request->city,
+                        'phone' => $request->phone,
+                        'name' => $request->name
+                    ];
+                    $order->order_address = json_encode($order_address);
+
+                    $order->paid = 0;
+                    $order->pay_method = $request->pay_method;
+                    $order->shipping_fee = $request->shipping_fee;
+                    $order->total_cost = $request->total_cost;
+                    $order->point_used_order = $request->point_used_order;
+                    $order->save();
+                    $order_id = $order->order_id;
+                    event(new OrderCreated());
+                    return response()->json([
+                        'status' => 'success',
+                        'data' => $request->all(),
+                        'order_id' => $order_id,
+                        'message' => 'Tạo đơn hàng thành công'
+                    ], 201);
+                }
             }
         } catch (\Exception $e) {
             return response()->json([
@@ -191,7 +223,7 @@ class OrderController extends Controller
                 ], 404);
             }
 
-            $order->status = 0;
+            $order->status = 'cancelled';
             $order->save();
 
             return response()->json([
@@ -220,12 +252,36 @@ class OrderController extends Controller
             }
 
             $order->status = $request->status;
+            if ($order->total_cost >= 1000000 && $request->status == 'delivered') {
+                $user = User::where('id', $order->user_id)->first();
+                $user->point = $user->point + 1;
+                $user->save();
+            }
             $order->save();
 
             return response()->json([
                 'status' => 'success',
                 'message' => 'Cập nhật trạng thái đơn hàng thành công',
                 'data' => $order
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function updateStatusByBillId(Request $request, $bill_id)
+    {
+        try {
+            $order = Order::where('bill_id', $bill_id)->first();
+            $order->status = $request->status;
+            $order->paid = 1;
+            $order->save();
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Cập nhật trạng thái đơn hàng thành công'
             ], 200);
         } catch (\Exception $e) {
             return response()->json([

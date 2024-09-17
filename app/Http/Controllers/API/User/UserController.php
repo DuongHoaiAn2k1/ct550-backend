@@ -241,15 +241,22 @@ class UserController extends Controller
     {
         try {
             $user_id = auth()->user()->id;
-            $name = $request->name;
+            $name = $request->input('name');
+            \Log::info('Request Data:', $request->all()); // Check request data
+
             if (empty($name)) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Name is empty'
+                    'message' => 'Name is empty',
                 ], 500);
             }
 
             $user = User::where('id', $user_id)->first();
+
+            if ($request->hasFile('image')) {
+                $imagePath = $request->file('image')->store('uploads', 'public');
+                $user->image = $imagePath;
+            }
             $user->name = $name;
             $user->save();
             return response()->json([
@@ -257,12 +264,14 @@ class UserController extends Controller
                 'message' => 'Name was updated'
             ], 200);
         } catch (\Exception $e) {
+            \Log::error('Update Error: ' . $e->getMessage()); // Log detailed error
             return response()->json([
                 'status' => 'error',
                 'message' => $e->getMessage()
             ], 500);
         }
     }
+
 
     public function update_pass(Request $request)
     {
@@ -609,6 +618,24 @@ class UserController extends Controller
                 'data' => $data,
                 'length' => $dataLength,
             ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getListUserWithRole()
+    {
+        try {
+            $user = User::whereHas('roles', function ($query) {
+                $query->whereIn('name', ['normal_user', 'loyal_customer', 'affiliate_marketer']);
+            })->with('roles')->get();
+            return response()->json([
+                'status' => 'success',
+                'data' => $user,
+            ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',

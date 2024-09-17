@@ -49,13 +49,16 @@ class GoogleLoginService
             // Đăng nhập người dùng và tạo token
             $token = auth()->login($user);
             $refreshToken = $this->createRefreshToken($user);
-
+            $role = $user->getRoleNames();
             // return $this->respondWithToken($token, $refreshToken, $user->id);
             echo "<script>
                     window.opener.postMessage({
                       access_token: '$token',
                       refresh_token: '$refreshToken',
-                      user_id: '$user->id'
+                      user_id: '$user->id',
+                      email: '$user->email',
+                      role: $role,
+                      google_id: '$user->google_id'
                     }, 'https://client.dacsancamau.com:3001');
                     window.close();
                   </script>";
@@ -64,13 +67,15 @@ class GoogleLoginService
         }
     }
 
-    protected function respondWithToken($token, $refreshToken, $userId)
+    protected function respondWithToken($token, $refreshToken, $userId, $role, $email)
     {
         return response()->json([
             'access_token' => $token,
             'refresh_token' => $refreshToken,
+            'email' => $email,
             'user_id' => $userId,
             'token_type' => 'bearer',
+            'role' => $role,
             'expires_in' => auth()->factory()->getTTL() * 60
         ]);
     }

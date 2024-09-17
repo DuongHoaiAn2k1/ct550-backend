@@ -15,7 +15,7 @@ class ProductController extends Controller
     public function index()
     {
         try {
-            $listProduct = Product::get();
+            $listProduct = Product::with('product_promotion')->with('product_promotion.promotion')->get();
             $dataLength = count($listProduct);
             return response()->json([
                 'status' => 'success',
@@ -56,7 +56,7 @@ class ProductController extends Controller
     public function get($product_id)
     {
         try {
-            $product = Product::where("product_id", $product_id)->first();
+            $product = Product::where("product_id", $product_id)->with('product_promotion')->with('product_promotion.promotion')->first();
             return response()->json([
                 'status' => 'succsess',
                 'message' => 'Lấy sản phẩm thành công',
@@ -75,7 +75,10 @@ class ProductController extends Controller
         try {
             $category_name = $request->category_name;
             $category = Category::where('category_name', $category_name)->first();
-            $products = $category->products;
+
+            $products = Product::where('category_id', $category->category_id)
+                ->with('product_promotion')->with('product_promotion.promotion')
+                ->get();
             return response()->json([
                 'status' => 'succsess',
                 'message' => 'Lấy sản phẩm thành công',

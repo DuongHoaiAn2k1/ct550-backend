@@ -24,6 +24,10 @@ class CartController extends Controller
                 'data' => $listCart
             ], 200);
         } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -39,22 +43,24 @@ class CartController extends Controller
                 $cart->user_id = $request->user_id;
                 $cart->product_id = $request->product_id;
                 $cart->quantity = $request->quantity;
+                $cart->total_weight = $request->total_weight;
                 $cart->save();
             } else {
                 if ($existsCart['quantity'] + $request->quantity <= 10) {
                     Cart::where('cart_id', $existsCart['cart_id'])->update([
-                        'quantity' => $existsCart['quantity'] + $request->quantity
+                        'quantity' => $existsCart['quantity'] + $request->quantity,
+                        'total_weight' => $existsCart['total_weight'] + $request->total_weight
                     ]);
                 } else {
-                    // return response()->json([
-                    //     'status' => 'error',
-                    //     'message' => 'Qúa số lượng cho phép'
-                    // ], 500);
-                    $cart = new Cart();
-                    $cart->user_id = $request->user_id;
-                    $cart->product_id = $request->product_id;
-                    $cart->quantity = $request->quantity;
-                    $cart->save();
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Qúa số lượng cho phép'
+                    ], 500);
+                    // $cart = new Cart();
+                    // $cart->user_id = $request->user_id;
+                    // $cart->product_id = $request->product_id;
+                    // $cart->quantity = $request->quantity;
+                    // $cart->save();
                 }
             }
 
@@ -77,7 +83,8 @@ class CartController extends Controller
 
             if ($cart['quantity'] > 1) {
                 Cart::where("cart_id", $cart_id)->update([
-                    'quantity' => $cart['quantity'] - 1
+                    'quantity' => $cart['quantity'] - 1,
+                    'total_weight' => $cart['total_weight'] - $cart['total_weight'] / $cart['quantity']
                 ]);
                 return response()->json([
                     'status' => 'success',
@@ -104,7 +111,8 @@ class CartController extends Controller
 
             if ($cart['quantity'] < 10) {
                 Cart::where("cart_id", $cart_id)->update([
-                    'quantity' => $cart['quantity'] + 1
+                    'quantity' => $cart['quantity'] + 1,
+                    'total_weight' => $cart['total_weight'] + $cart['total_weight'] / $cart['quantity']
                 ]);
                 return response()->json([
                     'status' => 'success',
