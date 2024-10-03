@@ -37,10 +37,15 @@ jobs:
         run: |
           docker-compose -f docker-compose.yml build
 
-      # Khởi động các dịch vụ Docker (nginx, mysql, redis, app)
+      # Start Docker containers
       - name: Start Docker containers
         run: |
           docker-compose -f docker-compose.yml up -d
+
+      # Cài đặt Composer dependencies
+      - name: Install Composer dependencies
+        run: |
+          docker-compose exec app composer install --no-interaction --prefer-dist
 
       # Chạy migrate và seed database
       - name: Run database migrations
