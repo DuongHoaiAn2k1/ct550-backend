@@ -51,6 +51,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Thiết lập SSH Agent và add SSH private key
+      - name: Setup SSH for deployment
+        uses: webfactory/ssh-agent@v0.8.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      # Deploy tới server qua SSH
       - name: Deploy to server
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
@@ -59,4 +66,5 @@ jobs:
           docker-compose down &&
           docker-compose up -d --build &&
           docker-compose exec app php artisan migrate --force"
+
 
