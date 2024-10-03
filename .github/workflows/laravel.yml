@@ -15,6 +15,18 @@ jobs:
       # Lấy mã nguồn
       - name: Checkout code
         uses: actions/checkout@v4
+      # Cài đặt Docker (nếu chưa có)
+      - name: Install Docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install docker-ce docker-ce-cli containerd.io
+
+      # Cài đặt Docker Compose
+      - name: Install Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+      
 
       # Thiết lập Docker
       - name: Set up Docker Buildx
