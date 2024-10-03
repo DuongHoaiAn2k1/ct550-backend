@@ -87,14 +87,22 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
+      - name: Add known hosts
+        run: ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Check SSH connection
+        run: ssh -T ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}
+
       # Deploy tới server qua SSH
       - name: Deploy to server
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
-          cd ct550 &&
-          git pull origin main &&
-          docker-compose down &&
-          docker-compose up -d --build &&
-          docker-compose exec app php artisan migrate --force"
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
+            cd ct550
+            git pull origin main
+            docker-compose down
+            docker-compose up -d --build
+            docker-compose exec -T app php artisan migrate --force
+          EOF
+
 
 
