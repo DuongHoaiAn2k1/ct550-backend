@@ -16,7 +16,7 @@ class Product extends Model
 
     public function order_detail()
     {
-        return $this->belongsToMany(OrderDetail::class, 'order_detail_id');
+        return $this->hasMany(OrderDetail::class, 'product_id');
     }
 
     public function favorite()
@@ -36,5 +36,15 @@ class Product extends Model
     public function product_promotion()
     {
         return $this->hasMany(ProductPromotion::class, 'product_id');
+    }
+
+    public function commission()
+    {
+        return $this->hasOne(Commission::class, 'product_id', 'product_id');
+    }
+
+    public function affiliate()
+    {
+        return $this->hasOne(AffiliateLink::class, 'product_id', 'product_id');
     }
 }

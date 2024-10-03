@@ -159,16 +159,26 @@ class AuthController extends Controller
 
     protected function respondWithToken($token, $refreshToken, $userId)
     {
+        $roles = auth()->user()->getRoleNames();
+
+        $affiliateRole = in_array('affiliate_marketer', $roles->toArray()) ? 'affiliate_marketer' : null;
+
+        $mainRole = $roles->filter(function ($role) {
+            return $role !== 'affiliate_marketer';
+        })->first();
+
         return response()->json([
             'access_token' => $token,
             'refresh_token' => $refreshToken,
             'user_id' => $userId,
             'email' => auth()->user()->email,
-            'role' => base64_encode(json_decode(auth()->user()->getRoleNames())[0]),
+            'role' => base64_encode($mainRole),
+            'affiliate_role' => $affiliateRole,
             'token_type' => 'bearer',
             'expires_in' => auth()->factory()->getTTL() * 60
         ]);
     }
+
 
     private function createRefreshToken()
     {

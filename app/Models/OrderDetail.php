@@ -26,4 +26,9 @@ class OrderDetail extends Model
     {
         return $this->belongsTo(Product::class, 'product_id');
     }
+
+    public function orderDetailBatch()
+    {
+        return $this->hasMany(OrderDetailBatch::class, 'order_detail_id');
+    }
 }

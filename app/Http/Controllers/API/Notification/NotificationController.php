@@ -34,9 +34,8 @@ class NotificationController extends Controller
     public function getAll()
     {
         try {
-
             $notification = new Notification();
-            $listData = $notification->orderBy('created_at', 'desc')->limit(20)->get();
+            $listData = $notification->where('type', 'admin')->orderBy('created_at', 'desc')->limit(20)->get();
             $count_unread = $notification->where('is_admin_read', false)->count();
 
             return response()->json([

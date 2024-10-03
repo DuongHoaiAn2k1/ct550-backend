@@ -56,11 +56,28 @@ class ProductController extends Controller
     public function get($product_id)
     {
         try {
-            $product = Product::where("product_id", $product_id)->with('product_promotion')->with('product_promotion.promotion')->first();
+            $product = Product::where("product_id", $product_id)
+                ->with('review')
+                ->with('product_promotion')
+                ->with('product_promotion.promotion')
+                ->first();
+
+            if (!$product) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Không tìm thấy sản phẩm'
+                ], 404);
+            }
+
+            $averageRating = $product->review->avg('rating');
+
+            $productData = $product->toArray();
+            $productData['average_rating'] = round($averageRating, 2);
+
             return response()->json([
-                'status' => 'succsess',
+                'status' => 'success',
                 'message' => 'Lấy sản phẩm thành công',
-                'data' => $product
+                'data' => $productData
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -69,6 +86,7 @@ class ProductController extends Controller
             ], 500);
         }
     }
+
 
     public function getProductByCategoryName(Request $request)
     {
@@ -446,138 +464,6 @@ class ProductController extends Controller
                     'status' => 'error',
                     'message' => 'Product not found'
                 ], 404);
-            }
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    public function getProductByCondition(Request $request)
-    {
-        try {
-            $condition = $request->condition;
-            $query = Product::query();
-
-            switch ($condition) {
-                case 1:
-                    // Lấy danh sách tất cả sản phẩm cùng với tổng số lượt bán và tổng tất cả total_order_detail của từng sản phẩm
-                    $products = $query->select('products.product_id', 'products.product_name', 'products.product_img', 'products.product_des', 'products.category_id', 'products.product_price', 'products.product_quantity', 'products.product_views', 'products.created_at', 'products.updated_at')
-                        ->join('order_detail', 'products.product_id', '=', 'order_detail.product_id')
-                        ->join('orders', 'order_detail.order_id', '=', 'orders.order_id')
-                        ->where('orders.status', '=', 3)
-                        ->groupBy('products.product_id', 'products.product_name', 'products.product_img', 'products.product_des', 'products.category_id', 'products.product_price', 'products.product_quantity', 'products.product_views', 'products.created_at', 'products.updated_at')
-                        ->selectRaw('products.*, SUM(order_detail.quantity) as total_quantity, SUM(order_detail.total_cost_detail) as total_cost_detail')
-                        ->get();
-
-                    return response()->json([
-                        'status' => 'success',
-                        'message' => 'Lấy danh sách tất cả sản phẩm cùng với tổng số lượt bán và tổng tất cả total_order_detail thành công',
-                        'data' => $products
-                    ], 200);
-                    break;
-                case 2:
-                    // Lấy danh sách sản phẩm được bán trong tháng này
-                    $currentMonth = date('m');
-                    $currentYear = date('Y');
-
-                    $products = $query->select('products.product_id', 'products.product_name', 'products.product_img', 'products.product_des', 'products.category_id', 'products.product_price', 'products.product_quantity', 'products.product_views', 'products.created_at', 'products.updated_at')
-                        ->join('order_detail', 'products.product_id', '=', 'order_detail.product_id')
-                        ->join('orders', 'order_detail.order_id', '=', 'orders.order_id')
-                        ->where('orders.status', '=', 3)
-                        ->whereMonth('order_detail.created_at', '=', $currentMonth)
-                        ->whereYear('order_detail.created_at', '=', $currentYear)
-                        ->groupBy('products.product_id', 'products.product_name', 'products.product_img', 'products.product_des', 'products.category_id', 'products.product_price', 'products.product_quantity', 'products.product_views', 'products.created_at', 'products.updated_at')
-                        ->selectRaw('products.*, SUM(order_detail.quantity) as total_quantity, SUM(order_detail.total_cost_detail) as total_cost_detail')
-                        ->get();
-
-                    return response()->json([
-                        'status' => 'success',
-                        'message' => 'Lấy danh sách sản phẩm được bán trong tháng này thành công',
-                        'data' => $products
-                    ], 200);
-                    break;
-                case 3:
-                    // Lấy thời gian bắt đầu và kết thúc của tháng trước
-                    $currentMonth = date('m');
-                    $currentYear = date('Y');
-
-                    if ($currentMonth == 1) {
-                        $lastMonth = 12;
-                        $year = $currentYear - 1;
-                    } else {
-                        $lastMonth = $currentMonth - 1;
-                        $year = $currentYear;
-                    }
-
-                    // Xác định ngày đầu tiên của tháng trước
-                    $startDate = date('Y-m-01', strtotime("$year-$lastMonth"));
-
-                    // Xác định ngày cuối cùng của tháng trước
-                    $endDate = date('Y-m-t', strtotime("$year-$lastMonth"));
-
-                    // Thêm thời gian vào ngày cuối cùng
-                    $endDate .= ' 23:59:59';
-
-                    // Lấy danh sách sản phẩm được bán trong tháng trước
-                    $products = $query->select('products.product_id', 'products.product_name', 'products.product_img', 'products.product_des', 'products.category_id', 'products.product_price', 'products.product_quantity', 'products.product_views', 'products.created_at', 'products.updated_at')
-                        ->join('order_detail', 'products.product_id', '=', 'order_detail.product_id')
-                        ->join('orders', 'order_detail.order_id', '=', 'orders.order_id')
-                        ->where('orders.status', '=', 3)
-                        ->whereBetween('order_detail.created_at', [$startDate, $endDate])
-                        ->groupBy('products.product_id', 'products.product_name', 'products.product_img', 'products.product_des', 'products.category_id', 'products.product_price', 'products.product_quantity', 'products.product_views', 'products.created_at', 'products.updated_at')
-                        ->selectRaw('products.*, SUM(order_detail.quantity) as total_quantity, SUM(order_detail.total_cost_detail) as total_cost_detail')
-                        ->get();
-
-                    return response()->json([
-                        'status' => 'success',
-                        'message' => 'Lấy danh sách sản phẩm được bán trong tháng trước thành công',
-                        'data' => $products
-                    ], 200);
-                    break;
-
-                case 4:
-                    // Lấy danh sách sản phẩm được bán trong năm 2024
-                    $products = $query->select('products.product_id', 'products.product_name', 'products.product_img', 'products.product_des', 'products.category_id', 'products.product_price', 'products.product_quantity', 'products.product_views', 'products.created_at', 'products.updated_at')
-                        ->join('order_detail', 'products.product_id', '=', 'order_detail.product_id')
-                        ->join('orders', 'order_detail.order_id', '=', 'orders.order_id')
-                        ->where('orders.status', '=', 3)
-                        ->whereYear('order_detail.created_at', '=', 2024)
-                        ->groupBy('products.product_id', 'products.product_name', 'products.product_img', 'products.product_des', 'products.category_id', 'products.product_price', 'products.product_quantity', 'products.product_views', 'products.created_at', 'products.updated_at')
-                        ->selectRaw('products.*, SUM(order_detail.quantity) as total_quantity, SUM(order_detail.total_cost_detail) as total_cost_detail')
-                        ->get();
-
-                    return response()->json([
-                        'status' => 'success',
-                        'message' => 'Lấy danh sách sản phẩm được bán trong năm 2024 thành công',
-                        'data' => $products
-                    ], 200);
-                    break;
-                case 5:
-                    // Lấy danh sách sản phẩm được bán trong năm 2023
-                    $products = $query->select('products.product_id', 'products.product_name', 'products.product_img', 'products.product_des', 'products.category_id', 'products.product_price', 'products.product_quantity', 'products.product_views', 'products.created_at', 'products.updated_at')
-                        ->join('order_detail', 'products.product_id', '=', 'order_detail.product_id')
-                        ->join('orders', 'order_detail.order_id', '=', 'orders.order_id')
-                        ->where('orders.status', '=', 3)
-                        ->whereYear('order_detail.created_at', '=', 2023)
-                        ->groupBy('products.product_id', 'products.product_name', 'products.product_img', 'products.product_des', 'products.category_id', 'products.product_price', 'products.product_quantity', 'products.product_views', 'products.created_at', 'products.updated_at')
-                        ->selectRaw('products.*, SUM(order_detail.quantity) as total_quantity, SUM(order_detail.total_cost_detail) as total_cost_detail')
-                        ->get();
-
-                    return response()->json([
-                        'status' => 'success',
-                        'message' => 'Lấy danh sách sản phẩm được bán trong năm 2023 thành công',
-                        'data' => $products
-                    ], 200);
-                    break;
-
-                default:
-                    return response()->json([
-                        'status' => 'error',
-                        'message' => 'Condition không hợp lệ'
-                    ], 400);
             }
         } catch (\Exception $e) {
             return response()->json([

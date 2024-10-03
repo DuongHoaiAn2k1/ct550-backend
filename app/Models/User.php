@@ -48,6 +48,10 @@ class User extends Authenticatable implements JWTSubject
         'password' => 'hashed',
     ];
 
+    public function order()
+    {
+        return $this->hasMany(Order::class, 'user_id');
+    }
     public function messagesSent()
     {
         return $this->hasMany(Message::class, 'sender_id');
@@ -58,6 +62,25 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(Message::class, 'receiver_id');
     }
 
+    public function affiliateRequests()
+    {
+        return $this->hasMany(AffiliateRequest::class, 'user_id');
+    }
+
+    public function affiliateLinks()
+    {
+        return $this->hasMany(AffiliateLink::class, 'affiliate_user_id');
+    }
+
+    public function affiliateSales()
+    {
+        return $this->hasMany(AffiliateSale::class, 'affiliate_user_id');
+    }
+
+    public function affiliateWallets()
+    {
+        return $this->hasOne(AffiliateWallet::class, 'affiliate_user_id');
+    }
 
     public function getJWTIdentifier()
     {

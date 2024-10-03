@@ -20,62 +20,75 @@ class GoogleLoginService
         try {
             $googleUser = Socialite::driver('google')->stateless()->user();
 
-            // Thêm đoạn mã để kiểm tra phản hồi từ Google
             \Log::info('Google User: ' . json_encode($googleUser));
 
-            // Kiểm tra sự tồn tại của email trong cơ sở dữ liệu
             $user = User::where('email', $googleUser->email)->first();
 
             if ($user) {
-                // Nếu người dùng tồn tại, cập nhật thông tin Google ID và avatar
                 $user->update([
                     'google_id' => $googleUser->id,
                     'avatar' => $googleUser->avatar,
                 ]);
             } else {
-                // Nếu người dùng không tồn tại, tạo mới người dùng
                 $user = User::create([
                     'name' => $googleUser->name,
                     'email' => $googleUser->email,
                     'google_id' => $googleUser->id,
                     'avatar' => $googleUser->avatar,
-                    'password' => bcrypt(Str::random(16)), // Tạo mật khẩu ngẫu nhiên cho người dùng mới
+                    'password' => bcrypt(Str::random(16)),
                 ]);
                 $user->assignRole('normal_user');
 
                 event(new UserRegistered());
             }
 
-            // Đăng nhập người dùng và tạo token
             $token = auth()->login($user);
             $refreshToken = $this->createRefreshToken($user);
-            $role = $user->getRoleNames();
-            // return $this->respondWithToken($token, $refreshToken, $user->id);
+
+            $roles = $user->getRoleNames();
+
+            $affiliateRole = in_array('affiliate_marketer', $roles->toArray()) ? 'affiliate_marketer' : null;
+
+            $mainRole = $roles->filter(function ($role) {
+                return $role !== 'affiliate_marketer';
+            })->first();
+
             echo "<script>
-                    window.opener.postMessage({
-                      access_token: '$token',
-                      refresh_token: '$refreshToken',
-                      user_id: '$user->id',
-                      email: '$user->email',
-                      role: $role,
-                      google_id: '$user->google_id'
-                    }, 'https://client.dacsancamau.com:3001');
-                    window.close();
-                  </script>";
+                window.opener.postMessage({
+                  access_token: '$token',
+                  refresh_token: '$refreshToken',
+                  user_id: '$user->id',
+                  email: '$user->email',
+                  role: '" . base64_encode($mainRole) . "',
+                  affiliate_role: '$affiliateRole',
+                  google_id: '$user->google_id'
+                }, 'https://client.dacsancamau.com:3001');
+                window.close();
+              </script>";
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to authenticate with Google', 'message' => $e->getMessage()], 500);
         }
     }
 
-    protected function respondWithToken($token, $refreshToken, $userId, $role, $email)
+
+    protected function respondWithToken($token, $refreshToken, $userId)
     {
+        $roles = auth()->user()->getRoleNames();
+
+        $affiliateRole = in_array('affiliate_marketer', $roles->toArray()) ? 'affiliate_marketer' : null;
+
+        $mainRole = $roles->filter(function ($role) {
+            return $role !== 'affiliate_marketer';
+        })->first();
+
         return response()->json([
             'access_token' => $token,
             'refresh_token' => $refreshToken,
-            'email' => $email,
             'user_id' => $userId,
+            'email' => auth()->user()->email,
+            'role' => base64_encode($mainRole),
+            'affiliate_role' => $affiliateRole,
             'token_type' => 'bearer',
-            'role' => $role,
             'expires_in' => auth()->factory()->getTTL() * 60
         ]);
     }

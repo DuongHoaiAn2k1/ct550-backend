@@ -33,6 +33,7 @@ class CustomMigrationServiceProvider extends ServiceProvider
             database_path('migrations/refund_request'),
             database_path('migrations/promotion'),
             database_path('migrations/message'),
+            database_path('migrations/affiliate'),
         ]);
     }
 }

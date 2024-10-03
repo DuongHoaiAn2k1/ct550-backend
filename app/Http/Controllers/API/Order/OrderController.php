@@ -4,10 +4,15 @@ namespace App\Http\Controllers\API\Order;
 
 use App\Models\User;
 use App\Models\Order;
+use App\Models\Commission;
 use Illuminate\Http\Request;
+use App\Models\AffiliateSale;
+use App\Models\AffiliateWallet;
 use App\Events\Order\OrderCreated;
 use Illuminate\Support\Facades\DB;
+use App\Events\Order\OrderCancelled;
 use App\Http\Controllers\Controller;
+use App\Events\Order\OrderUpdateStatus;
 use Illuminate\Support\Facades\Validator;
 
 class OrderController extends Controller
@@ -222,10 +227,9 @@ class OrderController extends Controller
                     'message' => 'Đơn hàng không tồn tại'
                 ], 404);
             }
-
             $order->status = 'cancelled';
             $order->save();
-
+            event(new OrderCancelled());
             return response()->json([
                 'status' => 'success',
                 'message' => 'Hủy đơn hàng thành công',
@@ -243,7 +247,10 @@ class OrderController extends Controller
     {
         try {
             $order = Order::where('order_id', $order_id)->first();
-
+            $affiliateSale = AffiliateSale::where('order_id', $order_id)->first() ?? null;
+            if ($affiliateSale) {
+                $affiliateWallet = AffiliateWallet::where('affiliate_user_id', $affiliateSale->affiliate_user_id)->first();
+            }
             if (!$order) {
                 return response()->json([
                     'status' => 'error',
@@ -257,8 +264,24 @@ class OrderController extends Controller
                 $user->point = $user->point + 1;
                 $user->save();
             }
-            $order->save();
 
+            if ($affiliateSale) {
+                if ($request->status == 'delivered') {
+                    $affiliateSale->order_status = 'done';
+                    $affiliateSale->save();
+                    $affiliateWallet->balance += $affiliateSale->commission_amount;
+                    $affiliateWallet->save();
+                } else {
+                    $affiliateSale->order_status = 'pending';
+                    $affiliateSale->save();
+                }
+
+                if ($request->status == 'cancelled') {
+                    $affiliateSale->delete();
+                }
+            }
+            $order->save();
+            event(new OrderUpdateStatus());
             return response()->json([
                 'status' => 'success',
                 'message' => 'Cập nhật trạng thái đơn hàng thành công',

@@ -29,6 +29,11 @@ RUN docker-php-ext-install zip
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg 
 RUN docker-php-ext-install -j$(nproc) gd
 
+# Install Xdebug
+RUN pecl install xdebug \
+    && docker-php-ext-enable xdebug
+
+
 # Copy configuration files and scripts
 COPY php.ini /usr/local/etc/php/
 COPY . .

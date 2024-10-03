@@ -11,14 +11,63 @@ use Illuminate\Support\Facades\Validator;
 
 class MessageController extends Controller
 {
+
+
+    public function getMessage()
+    {
+        try {
+            $userId = auth()->user()->id;
+            $messages = Message::where(function ($query) use ($userId) {
+                $query->where('sender_id', $userId)
+                    ->orWhere('receiver_id', $userId);
+            })
+                ->with(['sender', 'receiver'])
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            Message::where('receiver_id', $userId)
+                ->whereNull('read_at')
+                ->update(['read_at' => now()]);
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $messages,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' =>  $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function countUnUserUnreadMessage()
+    {
+        try {
+            $userId = auth()->user()->id;
+            $count = Message::where(function ($query) use ($userId) {
+                $query->where('receiver_id', $userId);
+            })
+                ->whereNull('read_at')
+                ->count();
+            return response()->json([
+                'status' => 'success',
+                'count' => $count
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' =>  $e->getMessage(),
+            ], 500);
+        }
+    }
+
     /**
      * Lấy danh sách tin nhắn của người dùng và hệ thống.
      */
     public function getUserMessages($userId)
     {
         try {
-
-
             $messages = Message::where(function ($query) use ($userId) {
                 $query->where('sender_id', $userId)
                     ->orWhere('receiver_id', $userId);
@@ -38,6 +87,28 @@ class MessageController extends Controller
             ], 500);
         }
     }
+
+    public function adminReadMessage($userId)
+    {
+        try {
+            Message::where('receiver_id', operator: env('ADMIN_ID'))
+                ->where('sender_id', $userId)
+                ->whereNull('read_at')
+                ->update(['read_at' => now()]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Read message success',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
 
     /**
      * Lấy danh sách tất cả tin nhắn của người dùng có role 'normal_user', 'loyal_customer', hoặc 'affiliate_marketer'.
