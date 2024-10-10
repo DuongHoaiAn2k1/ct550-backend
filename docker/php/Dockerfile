@@ -20,7 +20,11 @@ RUN apk add --no-cache \
     $PHPIZE_DEPS
 
 # Install Redis extension
-RUN pecl install redis && docker-php-ext-enable redis
+# Install Redis extension
+RUN apk add --no-cache autoconf gcc make \
+    && pecl install redis \
+    && docker-php-ext-enable redis
+
 # Install various PHP extensions
 RUN docker-php-ext-install pdo pdo_mysql
 RUN docker-php-ext-install mysqli && docker-php-ext-enable mysqli 

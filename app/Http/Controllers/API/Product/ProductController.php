@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\API\Product;
 
+use App\Models\Batch;
+use App\Models\Review;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Favorite;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 
 class ProductController extends Controller
@@ -15,13 +18,43 @@ class ProductController extends Controller
     public function index()
     {
         try {
-            $listProduct = Product::with('product_promotion')->with('product_promotion.promotion')->get();
-            $dataLength = count($listProduct);
+            $products = Product::with('product_promotion', 'product_promotion.promotion')
+                ->get()
+                ->map(function ($product) {
+                    // Tính tổng số lượng còn trong kho từ các lô hàng còn hạn trên 15 ngày
+                    $available_quantity = (int) Batch::where('product_id', $product->product_id)
+                        ->where('expiry_date', '>', now()->addDays(15))
+                        ->sum('quantity');
+
+                    // Tính trung bình rating
+                    $average_rating = (float) Review::where('product_id', $product->product_id)
+                        ->avg('rating');
+
+                    // Thêm các thuộc tính vào sản phẩm
+                    $product->available_quantity = $available_quantity;
+                    $product->average_rating = $average_rating ? round($average_rating, 2) : null; // Làm tròn đến 2 chữ số thập phân
+
+                    if (auth()->check()) {
+                        $user_id = auth()->user()->id;
+                        // Kiểm tra xem sản phẩm này có nằm trong danh sách yêu thích của người dùng hay không
+                        $is_favorite = Favorite::where('user_id', $user_id)
+                            ->where('product_id', $product->product_id)
+                            ->exists();
+
+                        // Thêm trường 'like' cho sản phẩm
+                        $product->liked = $is_favorite;
+                    } else {
+                        // Nếu người dùng không đăng nhập, trường 'like' sẽ là false
+                        $product->liked = false;
+                    }
+                    return $product;
+                });
+
             return response()->json([
                 'status' => 'success',
-                'message' => ' Lấy danh sách sản phẩm thành công',
-                'listProduct' => $listProduct,
-                'length' => $dataLength
+                'message' => 'Lấy sản phẩm thành công',
+                'listProduct' => $products,
+                'length' => $products->count()
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -53,31 +86,46 @@ class ProductController extends Controller
         }
     }
 
-    public function get($product_id)
+    public function get($id)
     {
         try {
-            $product = Product::where("product_id", $product_id)
-                ->with('review')
-                ->with('product_promotion')
-                ->with('product_promotion.promotion')
-                ->first();
+            $products = Product::where('product_id', $id)
+                ->with('product_promotion', 'product_promotion.promotion')
+                ->get()
+                ->map(function ($product) {
+                    // Tính tổng số lượng còn trong kho từ các lô hàng còn hạn trên 15 ngày
+                    $available_quantity = (int) Batch::where('product_id', $product->product_id)
+                        ->where('expiry_date', '>', now()->addDays(15))
+                        ->sum('quantity');
 
-            if (!$product) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Không tìm thấy sản phẩm'
-                ], 404);
-            }
+                    // Tính trung bình rating
+                    $average_rating = (float) Review::where('product_id', $product->product_id)
+                        ->avg('rating');
 
-            $averageRating = $product->review->avg('rating');
+                    // Thêm các thuộc tính vào sản phẩm
+                    $product->available_quantity = $available_quantity;
+                    $product->average_rating = $average_rating ? round($average_rating, 2) : null; // Làm tròn đến 2 chữ số thập phân
 
-            $productData = $product->toArray();
-            $productData['average_rating'] = round($averageRating, 2);
+                    if (auth()->check()) {
+                        $user_id = auth()->user()->id;
+                        // Kiểm tra xem sản phẩm này có nằm trong danh sách yêu thích của người dùng hay không
+                        $is_favorite = Favorite::where('user_id', $user_id)
+                            ->where('product_id', $product->product_id)
+                            ->exists();
+
+                        // Thêm trường 'like' cho sản phẩm
+                        $product->liked = $is_favorite;
+                    } else {
+                        // Nếu người dùng không đăng nhập, trường 'like' sẽ là false
+                        $product->liked = false;
+                    }
+                    return $product;
+                });
 
             return response()->json([
                 'status' => 'success',
                 'message' => 'Lấy sản phẩm thành công',
-                'data' => $productData
+                'data' => $products
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -94,11 +142,51 @@ class ProductController extends Controller
             $category_name = $request->category_name;
             $category = Category::where('category_name', $category_name)->first();
 
+            if (!$category) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Category not found'
+                ], 404);
+            }
+
+            // Lấy danh sách sản phẩm theo category_id
             $products = Product::where('category_id', $category->category_id)
-                ->with('product_promotion')->with('product_promotion.promotion')
-                ->get();
+                ->with('product_promotion', 'product_promotion.promotion')
+                ->get()
+                ->map(function ($product) {
+                    // Tính tổng số lượng còn trong kho từ các lô hàng còn hạn trên 15 ngày
+                    $available_quantity = (int) Batch::where('product_id', $product->product_id)
+                        ->where('expiry_date', '>', now()->addDays(15))
+                        ->sum('quantity');
+
+                    // Tính trung bình rating
+                    $average_rating = (float) Review::where('product_id', $product->product_id)
+                        ->avg('rating');
+
+                    // Thêm các thuộc tính vào sản phẩm
+                    $product->available_quantity = $available_quantity;
+                    $product->average_rating = $average_rating ? round($average_rating, 2) : null; // Làm tròn đến 2 chữ số thập phân
+
+                    // Kiểm tra nếu người dùng đã đăng nhập
+                    if (auth()->check()) {
+                        $user_id = auth()->user()->id;
+                        // Kiểm tra xem sản phẩm này có nằm trong danh sách yêu thích của người dùng hay không
+                        $is_favorite = Favorite::where('user_id', $user_id)
+                            ->where('product_id', $product->product_id)
+                            ->exists();
+
+                        // Thêm trường 'like' cho sản phẩm
+                        $product->liked = $is_favorite;
+                    } else {
+                        // Nếu người dùng không đăng nhập, trường 'like' sẽ là false
+                        $product->liked = false;
+                    }
+
+                    return $product;
+                });
+
             return response()->json([
-                'status' => 'succsess',
+                'status' => 'success',
                 'message' => 'Lấy sản phẩm thành công',
                 'data' => $products
             ], 200);
@@ -109,6 +197,7 @@ class ProductController extends Controller
             ], 500);
         }
     }
+
 
     public function getProductByName(Request $request)
     {
@@ -236,14 +325,42 @@ class ProductController extends Controller
 
     public function getProductByCategoryId($category_id)
     {
-        // return response()->json([
-        //     "data" => $request->category_name
-        // ], 200);
         try {
-            $category = Category::find($category_id);
-            $products = $category->products;
+            $products = Product::where('category_id', $category_id)
+                ->with('product_promotion', 'product_promotion.promotion')
+                ->get()
+                ->map(function ($product) {
+                    // Tính tổng số lượng còn trong kho từ các lô hàng còn hạn trên 15 ngày
+                    $available_quantity = (int) Batch::where('product_id', $product->product_id)
+                        ->where('expiry_date', '>', now()->addDays(15))
+                        ->sum('quantity');
+
+                    // Tính trung bình rating
+                    $average_rating = (float) Review::where('product_id', $product->product_id)
+                        ->avg('rating');
+
+                    // Thêm các thuộc tính vào sản phẩm
+                    $product->available_quantity = $available_quantity;
+                    $product->average_rating = $average_rating ? round($average_rating, 2) : null; // Làm tròn đến 2 chữ số thập phân
+
+                    if (auth()->check()) {
+                        $user_id = auth()->user()->id;
+                        // Kiểm tra xem sản phẩm này có nằm trong danh sách yêu thích của người dùng hay không
+                        $is_favorite = Favorite::where('user_id', $user_id)
+                            ->where('product_id', $product->product_id)
+                            ->exists();
+
+                        // Thêm trường 'like' cho sản phẩm
+                        $product->liked = $is_favorite;
+                    } else {
+                        // Nếu người dùng không đăng nhập, trường 'like' sẽ là false
+                        $product->liked = false;
+                    }
+                    return $product;
+                });
+
             return response()->json([
-                'status' => 'succsess',
+                'status' => 'success',
                 'message' => 'Lấy sản phẩm thành công',
                 'data' => $products
             ], 200);
@@ -542,6 +659,99 @@ class ProductController extends Controller
             ], 200);
         } catch (\Exception $e) {
             // Xử lý ngoại lệ nếu có
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function searchAI(Request $request)
+    {
+        try {
+            // Lấy giá trị 'query' từ request
+            $query = $request->input('query');
+
+            if (empty($query)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Trường query không được để trống'
+                ], 400);
+            }
+
+            // Gửi dữ liệu JSON đến API Python
+            $client = new \GuzzleHttp\Client();
+            $response = $client->post('http://python-search:8000/api/search/all', [
+                'json' => [
+                    'query' => $query
+                ]
+            ]);
+
+            // Lấy danh sách sản phẩm trả về từ API Python
+            $body = json_decode($response->getBody(), true);
+
+            // Lấy danh sách product_id từ kết quả trả về
+            $productIds = array_column($body, 'product_id');
+
+            // Truy vấn cơ sở dữ liệu để lấy thông tin chi tiết của các sản phẩm
+            $products = Product::whereIn('product_id', $productIds)->with('product_promotion', 'product_promotion.promotion')
+                ->get()
+                ->map(function ($product) {
+                    // Tính tổng số lượng còn trong kho từ các lô hàng còn hạn trên 15 ngày
+                    $available_quantity = (int) Batch::where('product_id', $product->product_id)
+                        ->where('expiry_date', '>', now()->addDays(15))
+                        ->sum('quantity');
+
+                    // Tính trung bình rating
+                    $average_rating = (float) Review::where('product_id', $product->product_id)
+                        ->avg('rating');
+
+                    // Thêm các thuộc tính vào sản phẩm
+                    $product->available_quantity = $available_quantity;
+                    $product->average_rating = $average_rating ? round($average_rating, 2) : null; // Làm tròn đến 2 chữ số thập phân
+
+                    if (auth()->check()) {
+                        $user_id = auth()->user()->id;
+                        // Kiểm tra xem sản phẩm này có nằm trong danh sách yêu thích của người dùng hay không
+                        $is_favorite = Favorite::where('user_id', $user_id)
+                            ->where('product_id', $product->product_id)
+                            ->exists();
+
+                        // Thêm trường 'like' cho sản phẩm
+                        $product->liked = $is_favorite;
+                    } else {
+                        // Nếu người dùng không đăng nhập, trường 'like' sẽ là false
+                        $product->liked = false;
+                    }
+                    return $product;
+                });
+
+            // Kết hợp thông tin sản phẩm với similarity
+            $result = [];
+            foreach ($products as $product) {
+                // Tìm similarity cho product_id tương ứng
+                $matchingProduct = collect($body)->firstWhere('product_id', $product->product_id);
+
+                // Kiểm tra nếu tìm thấy product_id trong kết quả trả về từ API Python
+                $similarity = $matchingProduct ? $matchingProduct['similarity'] : null;
+
+                $result[] = [
+                    'product' => $product,
+                    'similarity' => $similarity
+                ];
+            }
+
+            usort($result, function ($a, $b) {
+                return $b['similarity'] <=> $a['similarity'];
+            });
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Lấy danh sách sản phẩm từ API thành công',
+                'data' => $result,
+                'length' => count($result)
+            ], 200);
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
                 'message' => $e->getMessage()

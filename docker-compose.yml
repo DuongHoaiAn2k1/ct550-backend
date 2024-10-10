@@ -68,6 +68,8 @@ services:
       PMA_HOST: mysql 
     networks: 
       - network-app
+
+      
   redis:
     image: redis:alpine
     container_name: redis
@@ -76,6 +78,25 @@ services:
       - redis-data:/data
     networks:
       - network-app
+
+  python-search:
+    build:
+      context: docker/python
+      dockerfile: Dockerfile.python
+    restart: unless-stopped
+    container_name: python_search
+    ports:
+      - "8001:8000" 
+    networks:
+      - network-app
+    depends_on:
+      - mysql
+    environment:
+      - DB_HOST=mysql
+      - DB_USER=ct550_user
+      - DB_PASSWORD=ct550
+      - DB_NAME=ct550_db
+      - DB_PORT=3306
 
 volumes:
   db-store:

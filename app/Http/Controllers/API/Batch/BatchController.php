@@ -37,7 +37,7 @@ class BatchController extends Controller
     public function index()
     {
         try {
-            $batches = Batch::with('product')->with('user')->get();
+            $batches = Batch::where('status', 'Active')->with('product')->with('user')->get();
 
             return response()->json([
                 'status' => 'success',
@@ -50,6 +50,58 @@ class BatchController extends Controller
             ], 500);
         }
     }
+
+    public function getHiddenList()
+    {
+        try {
+            $batches = Batch::where('status', 'Hidden')->with('product')->with('user')->get();
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $batches
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getExpiringSoon()
+    {
+        try {
+            $batches = Batch::where('status', 'Expiring Soon')->with('product')->with('user')->get();
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $batches
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getExpired()
+    {
+        try {
+            $batches = Batch::where('status', 'Expired')->with('product')->with('user')->get();
+            return response()->json([
+                'status' => 'success',
+                'data' => $batches
+
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function create(Request $request)
     {
         $customMessage = [
@@ -202,7 +254,7 @@ class BatchController extends Controller
 
             $date_threshold = now()->addDays(15);
 
-            $batches = Batch::where('product_id', $product_id)
+            $batches = Batch::where('product_id', $product_id)->where('status', 'Active')
                 ->where('expiry_date', '>', $date_threshold)
                 ->orderBy('entry_date', 'asc')
                 ->lockForUpdate()
@@ -273,7 +325,7 @@ class BatchController extends Controller
             $product_id = $product['product_id'];
             $required_quantity = $product['quantity'];
 
-            $total_available_quantity = Batch::where('product_id', $product_id)
+            $total_available_quantity = Batch::where('product_id', $product_id)->where('status', 'Active')
                 ->where('expiry_date', '>', now()->addDays(15)) // Chỉ tính các lô hàng có hạn sử dụng trên 15 ngày
                 ->sum('quantity');
 
@@ -302,5 +354,50 @@ class BatchController extends Controller
             'status' => 'success',
             'message' => 'All products have enough stock'
         ], 200);
+    }
+
+    public function checkProductInStock($product_id)
+    {
+        try {
+            $total_available_quantity = Batch::where('product_id', $product_id)
+                ->where('expiry_date', '>', now()->addDays(15)) // Chỉ lấy các lô hàng có hạn sử dụng trên 15 ngày
+                ->sum('quantity');
+
+            if ($total_available_quantity > 0) {
+                return response()->json([
+                    'status' => 'success',
+                    'data' => true,
+                    'available_quantity' => $total_available_quantity
+                ], 200);
+            }
+
+            return response()->json([
+                'status' => 'out_of_stock',
+                'data' => false,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function updateStatus($batch_id, Request $request)
+    {
+        try {
+            $batch = Batch::find($batch_id);
+            $batch->status = $request->status;
+            $batch->save();
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Update status successfully'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 }

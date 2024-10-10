@@ -13,31 +13,28 @@ class FavoriteController extends Controller
         try {
             $user_id = auth()->user()->id;
             $product_id = $request->product_id;
-            $favorite = new Favorite();
-
-            $exitsProduct = Favorite::where('user_id', $user_id)->where('product_id', $product_id)->first();
-
-            if ($exitsProduct) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Product is exists'
-                ], 500);
-            }
-
             if (empty($product_id)) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Product Id is empty'
                 ], 500);
             }
+            $favorite = new Favorite();
 
+            $exitsProduct = Favorite::where('user_id', $user_id)->where('product_id', $product_id)->first();
+
+            if ($exitsProduct) {
+                $exitsProduct->delete();
+                return response()->json([
+                    'status' => 'deleted',
+                    'message' => 'Remove favorite product successfully'
+                ], 200);
+            }
             $favorite->user_id = $user_id;
             $favorite->product_id = $product_id;
             $favorite->save();
-
-
             return response()->json([
-                'status' => 'success',
+                'status' => 'created',
                 'message' => 'Add favorite product successfully'
             ], 200);
         } catch (\Exception $e) {

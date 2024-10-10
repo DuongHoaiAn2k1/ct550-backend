@@ -19,7 +19,7 @@ class ProductBatchController extends Controller
 
             $products = $products->map(function ($product) {
                 // Tính tổng quantity từ các batches của sản phẩm
-                $product->product_quantity = $product->batches->sum('quantity');
+                $product->product_quantity = $product->batches->where('status', 'Active')->where('expiry_date', '>', now()->addDays(15))->sum('quantity');
                 return $product;
             });
 

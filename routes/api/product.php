@@ -20,6 +20,7 @@ Route::prefix('/product')->group(function () {
     Route::post('/increase/view/{id}', [ProductController::class, 'increase_product_view_count']);
     Route::patch('/{id}', [ProductController::class, 'updateQuantity']);
     Route::get('/review/list', [ProductController::class, 'getProductsWithReviews']);
+    Route::post('/search-ai/query', [ProductController::class, 'searchAI']);
 
     Route::prefix('/batch')->group(function () {
         Route::get('/list', [ProductBatchController::class, 'index']);

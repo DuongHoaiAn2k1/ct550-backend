@@ -1,0 +1,154 @@
+
+   ERROR  There are no commands defined in the "batch" namespace.  
+
+
+   ERROR  There are no commands defined in the "batch" namespace.  
+
+
+   ERROR  There are no commands defined in the "batch" namespace.  
+
+
+   ERROR  There are no commands defined in the "batch" namespace.  
+
+
+   ERROR  There are no commands defined in the "batch" namespace.  
+
+
+   ERROR  There are no commands defined in the "batch" namespace.  
+
+
+   ERROR  There are no commands defined in the "batch" namespace.  
+
+
+   ERROR  There are no commands defined in the "batch" namespace.  
+
+
+   ERROR  There are no commands defined in the "batch" namespace.  
+
+
+   Illuminate\Database\QueryException 
+
+  SQLSTATE[HY000] [2002] Connection timed out (Connection: mysql, SQL: update `batches` set `status` = Expiring Soon, `batches`.`updated_at` = 2024-10-08 03:26:02 where `status` = Active and `expiry_date` <= 2024-10-23 03:26:02 and `expiry_date` > 2024-10-08 03:26:02)
+
+  at CT550/backend/vendor/laravel/framework/src/Illuminate/Database/Connection.php:829
+    825▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    826▕                 );
+    827▕             }
+    828▕ 
+  ➜ 829▕             throw new QueryException(
+    830▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    831▕             );
+    832▕         }
+    833▕     }
+
+      [2m+17 vendor frames [22m
+
+  18  CT550/backend/app/Console/Commands/UpdateBatchStatus.php:30
+      Illuminate\Database\Eloquent\Builder::update()
+
+  19  CT550/backend/app/Console/Commands/UpdateBatchStatus.php:16
+      App\Console\Commands\UpdateBatchStatus::updateExpiringSoon()
+
+
+   Illuminate\Database\QueryException 
+
+  SQLSTATE[HY000] [2002] Connection timed out (Connection: mysql, SQL: update `batches` set `status` = Expiring Soon, `batches`.`updated_at` = 2024-10-08 03:27:02 where `status` = Active and `expiry_date` <= 2024-10-23 03:27:02 and `expiry_date` > 2024-10-08 03:27:02)
+
+  at CT550/backend/vendor/laravel/framework/src/Illuminate/Database/Connection.php:829
+    825▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    826▕                 );
+    827▕             }
+    828▕ 
+  ➜ 829▕             throw new QueryException(
+    830▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    831▕             );
+    832▕         }
+    833▕     }
+
+      [2m+17 vendor frames [22m
+
+  18  CT550/backend/app/Console/Commands/UpdateBatchStatus.php:30
+      Illuminate\Database\Eloquent\Builder::update()
+
+  19  CT550/backend/app/Console/Commands/UpdateBatchStatus.php:16
+      App\Console\Commands\UpdateBatchStatus::updateExpiringSoon()
+
+
+   Illuminate\Database\QueryException 
+
+  SQLSTATE[HY000] [2002] Connection timed out (Connection: mysql, SQL: update `batches` set `status` = Expiring Soon, `batches`.`updated_at` = 2024-10-08 03:28:02 where `status` = Active and `expiry_date` <= 2024-10-23 03:28:02 and `expiry_date` > 2024-10-08 03:28:02)
+
+  at CT550/backend/vendor/laravel/framework/src/Illuminate/Database/Connection.php:829
+    825▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    826▕                 );
+    827▕             }
+    828▕ 
+  ➜ 829▕             throw new QueryException(
+    830▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    831▕             );
+    832▕         }
+    833▕     }
+
+      [2m+17 vendor frames [22m
+
+  18  CT550/backend/app/Console/Commands/UpdateBatchStatus.php:30
+      Illuminate\Database\Eloquent\Builder::update()
+
+  19  CT550/backend/app/Console/Commands/UpdateBatchStatus.php:16
+      App\Console\Commands\UpdateBatchStatus::updateExpiringSoon()
+
+the input device is not a TTY
+
+   Illuminate\Database\QueryException 
+
+  SQLSTATE[HY000] [2002] Connection timed out (Connection: mysql, SQL: update `batches` set `status` = Expiring Soon, `batches`.`updated_at` = 2024-10-08 03:29:01 where `status` = Active and `expiry_date` <= 2024-10-23 03:29:01 and `expiry_date` > 2024-10-08 03:29:01)
+
+  at CT550/backend/vendor/laravel/framework/src/Illuminate/Database/Connection.php:829
+    825▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    826▕                 );
+    827▕             }
+    828▕ 
+  ➜ 829▕             throw new QueryException(
+    830▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    831▕             );
+    832▕         }
+    833▕     }
+
+      [2m+17 vendor frames [22m
+
+  18  CT550/backend/app/Console/Commands/UpdateBatchStatus.php:30
+      Illuminate\Database\Eloquent\Builder::update()
+
+  19  CT550/backend/app/Console/Commands/UpdateBatchStatus.php:16
+      App\Console\Commands\UpdateBatchStatus::updateExpiringSoon()
+
+the input device is not a TTY
+
+   Illuminate\Database\QueryException 
+
+  SQLSTATE[HY000] [2002] Connection timed out (Connection: mysql, SQL: update `batches` set `status` = Expiring Soon, `batches`.`updated_at` = 2024-10-08 03:30:02 where `status` = Active and `expiry_date` <= 2024-10-23 03:30:02 and `expiry_date` > 2024-10-08 03:30:02)
+
+  at CT550/backend/vendor/laravel/framework/src/Illuminate/Database/Connection.php:829
+    825▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    826▕                 );
+    827▕             }
+    828▕ 
+  ➜ 829▕             throw new QueryException(
+    830▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    831▕             );
+    832▕         }
+    833▕     }
+
+      [2m+17 vendor frames [22m
+
+  18  CT550/backend/app/Console/Commands/UpdateBatchStatus.php:30
+      Illuminate\Database\Eloquent\Builder::update()
+
+  19  CT550/backend/app/Console/Commands/UpdateBatchStatus.php:16
+      App\Console\Commands\UpdateBatchStatus::updateExpiringSoon()
+
+the input device is not a TTY
+the input device is not a TTY
+the input device is not a TTY
+the input device is not a TTY
+Batch statuses updated successfully.
