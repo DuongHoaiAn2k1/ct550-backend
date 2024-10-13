@@ -12,6 +12,7 @@ Route::prefix('/order')->group(function () {
     Route::get('/today/all', [OrderController::class, 'get_order_today']);
     Route::post('/bydate/all', [OrderController::class, 'get_orders_between_dates']);
     Route::post('/', [OrderController::class, 'create']);
+    Route::post('/send-email/{order_id}/', [OrderController::class, 'sendOrderConfirmationEmail']);
     Route::delete('/{id}', [OrderController::class, 'delete']);
     Route::get('/count/order', [OrderController::class, 'count']);
     Route::patch('/{id}', [OrderController::class, 'cancel']);

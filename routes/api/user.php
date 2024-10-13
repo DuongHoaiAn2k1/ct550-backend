@@ -5,8 +5,9 @@ use App\Http\Controllers\API\User\UserController;
 
 
 Route::prefix('/user')->group(function () {
+    Route::post('/reset/password/user', [UserController::class, 'resetPassword']);
     Route::get('/list-user', [UserController::class, 'getListUser']);
-    Route::get('list-user/{role}', [UserController::class, 'getListUsersByRole']);
+    Route::get('/list-user/{role}', [UserController::class, 'getListUsersByRole']);
     Route::get('/', [UserController::class, 'getAll']);
     Route::get('/{id}', [UserController::class, 'index']);
     Route::post('/update', [UserController::class, 'update']);

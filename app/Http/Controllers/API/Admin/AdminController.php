@@ -9,6 +9,22 @@ use Illuminate\Support\Facades\Validator;
 
 class AdminController extends Controller
 {
+    public function getProfile($id)
+    {
+        try {
+            $user = User::find($id);
+            return response()->json([
+                'status' => 'success',
+                'data' => $user
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function register(Request $request)
     {
         try {

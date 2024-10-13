@@ -8,3 +8,6 @@ exit
 wich docker
 which docker
 exit
+id
+php artisan migrate
+exit

@@ -56,14 +56,21 @@ def fetch_products():
         return []
 
 def preprocess_for_tfidf(products):
-    """Preprocess products data and apply TF-IDF."""
-    descriptions = [product['product_des'] for product in products]
+    """Preprocess product data by combining name and description, then apply TF-IDF."""
+    # Kết hợp tên sản phẩm và mô tả sản phẩm thành một chuỗi
+    combined_texts = [f"{product['product_name']} {product['product_des']}" for product in products]
+    
+    # Chuẩn hóa văn bản (chuyển về chữ thường)
+    combined_texts = [text.lower() for text in combined_texts]
 
-    # Initialize TF-IDF Vectorizer
-    vectorizer = TfidfVectorizer()
-    tfidf_matrix = vectorizer.fit_transform(descriptions)
+    # Khởi tạo TfidfVectorizer từ scikit-learn
+    vectorizer = TfidfVectorizer(ngram_range=(1, 2), max_df=0.85)
+
+    # Áp dụng TF-IDF lên các mô tả kết hợp (tên + mô tả sản phẩm)
+    tfidf_matrix = vectorizer.fit_transform(combined_texts)
 
     return tfidf_matrix, vectorizer
+
 
 class SearchQuery(BaseModel):
     query: str
@@ -73,16 +80,24 @@ async def search(query: SearchQuery):
     products = fetch_products()
     if not products:
         return {"error": "No products found"}
+    
+    # Chuẩn hóa truy vấn của người dùng
+    query_text = query.query.lower()
 
+    # Áp dụng TF-IDF lên mô tả sản phẩm
     tfidf_matrix, vectorizer = preprocess_for_tfidf(products)
-    query_tfidf = vectorizer.transform([query.query])
+
+    # Chuyển truy vấn thành ma trận TF-IDF
+    query_tfidf = vectorizer.transform([query_text])
+
+     # Tính toán độ tương đồng cosine
     similarities = cosine_similarity(query_tfidf, tfidf_matrix).flatten()
 
-    # Limit number of returned results
+    # Lấy 5 sản phẩm có độ tương đồng cao nhất
     n = 5
     top_indices = similarities.argsort()[-n:][::-1]
 
-    # Prepare results with names, ids, images, and similarities
+    # Chuẩn bị kết quả trả về
     results = [{"product_id": products[i]["product_id"], 
                 "product_name": products[i]["product_name"], 
                 "product_img": products[i]["product_img"], 
@@ -99,16 +114,24 @@ async def search_all(query: SearchQuery):
     products = fetch_products()
     if not products:
         return {"error": "No products found"}
+    
+    # Chuẩn hóa truy vấn của người dùng
+    query_text = query.query.lower()
 
+    # Áp dụng TF-IDF lên mô tả sản phẩm
     tfidf_matrix, vectorizer = preprocess_for_tfidf(products)
-    query_tfidf = vectorizer.transform([query.query])
+
+    # Chuyển truy vấn thành ma trận TF-IDF
+    query_tfidf = vectorizer.transform([query_text])
+
+    # Tính toán độ tương đồng cosine
     similarities = cosine_similarity(query_tfidf, tfidf_matrix).flatten()
 
-    # Limit number of returned results
+    # Lấy 10 sản phẩm có độ tương đồng cao nhất
     n = 10
     top_indices = similarities.argsort()[-n:][::-1] 
 
-    # Prepare results with names, ids, images, and similarities
+     # Chuẩn bị kết quả trả về
     results = [{"product_id": products[i]["product_id"], 
                 "similarity": similarities[i]} 
                for i in top_indices]

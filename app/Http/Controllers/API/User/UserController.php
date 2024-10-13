@@ -6,13 +6,15 @@ use App\Models\User;
 use App\Mail\OtpMail;
 use App\Rules\HasChar;
 use App\Models\Message;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use PhpParser\Node\Stmt\TryCatch;
+use Illuminate\Support\Carbon;
 use App\Events\User\UserRegistered;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
+
 
 class UserController extends Controller
 {
@@ -91,6 +93,39 @@ class UserController extends Controller
                 ], 500);
             }
         }
+    }
+
+    public function resetPassword(Request $request)
+    {
+        if (!isset($request->email)) {
+            return response()->json(['status' => 'error', 'message' => 'Email not found'], 404);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json(['status' => 'error', 'message' => 'Email not found'], 404);
+        }
+        // Check if the user has already reset their password within the last month
+        if ($user->last_password_reset && $user->last_password_reset > Carbon::now()->subMonth()) {
+            return response()->json(['status' => 'error', 'message' => 'Bạn đã thay đổi mật khẩu trong vòng 30 ngày qua.'], 403);
+        }
+
+        // Generate a new password
+        $newPassword = $this->generatePassword();
+
+        // Update the user's password
+        $user->password = bcrypt($newPassword);
+        $user->last_password_reset = Carbon::now();
+        $user->save();
+
+        // Send the new password to the user's email
+        Mail::send('emails.reset_password', ['user' => $user, 'newPassword' => $newPassword], function ($message) use ($user) {
+            $message->to($user->email)
+                ->subject('Cấp lại mật khẩu');
+        });
+
+        return response()->json(['status' => 'success', 'message' => 'Password reset successfully. Please check your email.']);
     }
 
     public function index($id)
@@ -542,5 +577,22 @@ class UserController extends Controller
                 'message' => $e->getMessage()
             ], 500);
         }
+    }
+
+    private function generatePassword($length = 10)
+    {
+        do {
+
+            $password = Str::random($length);
+        } while (!$this->isValidPassword($password));
+
+        return $password;
+    }
+
+    private function isValidPassword($password)
+    {
+        return strlen($password) > 6
+            && preg_match('/[a-zA-Z]/', $password)
+            && preg_match('/[0-9]/', $password);
     }
 }

@@ -7,11 +7,13 @@ use App\Models\Order;
 use App\Models\Commission;
 use Illuminate\Http\Request;
 use App\Models\AffiliateSale;
+use App\Mail\OrderCreatedMail;
 use App\Models\AffiliateWallet;
 use App\Events\Order\OrderCreated;
 use Illuminate\Support\Facades\DB;
 use App\Events\Order\OrderCancelled;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Mail;
 use App\Events\Order\OrderUpdateStatus;
 use Illuminate\Support\Facades\Validator;
 
@@ -129,7 +131,6 @@ class OrderController extends Controller
                         'name' => $request->name
                     ];
                     $order->order_address = json_encode($order_address);
-
                     $order->paid = $request->paid;
                     $order->shipping_fee = $request->shipping_fee;
                     $order->total_cost = $request->total_cost;
@@ -181,6 +182,33 @@ class OrderController extends Controller
             ], 500);
         }
     }
+
+    public function sendOrderConfirmationEmail($order_id)
+    {
+        try {
+            $order = Order::with('orderDetail.product')->where('order_id', $order_id)->first();
+
+            if (!$order) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Đơn hàng không tồn tại'
+                ], 404);
+            }
+
+            Mail::to(auth()->user()->email)->send(new OrderCreatedMail($order));
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Email xác nhận đơn hàng đã được gửi'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Có lỗi xảy ra khi gửi email: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
 
     public function delete($id)
     {
