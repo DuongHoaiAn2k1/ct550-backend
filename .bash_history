@@ -11,3 +11,9 @@ exit
 id
 php artisan migrate
 exit
+clear
+php artisan migrate
+clear
+php artisan make:mail AffiliateRequestRejected
+php artisan make:event Affiliate/AffiliateRejected
+exit

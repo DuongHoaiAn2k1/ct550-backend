@@ -3,12 +3,16 @@
 namespace App\Http\Controllers\API\Affiliate;
 
 use App\Models\User;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use App\Models\AffiliateWallet;
 use App\Models\AffiliateRequest;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\AffiliateRequestRejected;
 use App\Events\Affiliate\AffiliateApproved;
 use App\Events\Affiliate\AffiliateCreateRequest;
+use App\Events\Affiliate\AffiliateRejectedEvent;
 
 class AffiliateRequestController extends Controller
 {
@@ -33,12 +37,13 @@ class AffiliateRequestController extends Controller
     }
 
 
-    public function create()
+    public function create(Request $request)
     {
         try {
             $user_id = auth()->user()->id;
             $affiliateRequest = new AffiliateRequest();
             $affiliateRequest->user_id = $user_id;
+            $affiliateRequest->social_media_link = $request->social_media_link;
             $affiliateRequest->save();
             event(new AffiliateCreateRequest());
             return response([
@@ -92,12 +97,21 @@ class AffiliateRequestController extends Controller
     }
 
 
-    public function reject($affiliate_request_id)
+    public function rejected($affiliate_request_id, Request $request)
     {
         try {
             $affiliateRequest = AffiliateRequest::where('affiliate_request_id', $affiliate_request_id)->first();
+            $affiliateRequest->reason = $request->reason;
             $affiliateRequest->status = 'rejected';
             $affiliateRequest->save();
+            $notification = new Notification();
+            $notification->user_id = $affiliateRequest->user_id;
+            $notification->message = 'Yêu cầu trở thành người tiếp thị đã bị từ chối';
+            $notification->type = 'user';
+            $notification->route_name = 'profile';
+            $notification->save();
+            event(new AffiliateRejectedEvent());
+            Mail::to($affiliateRequest->user->email)->send(new AffiliateRequestRejected($request->reason));
             return response([
                 'status' => 'success',
                 'data' => $affiliateRequest
