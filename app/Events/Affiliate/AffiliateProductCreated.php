@@ -10,15 +10,16 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class AffiliateApproved implements ShouldBroadcast
+class AffiliateProductCreated implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $user_id;
-
-    public function __construct($user_id)
+    /**
+     * Create a new event instance.
+     */
+    public function __construct()
     {
-        $this->user_id = $user_id;
+        //
     }
 
     /**
@@ -29,13 +30,12 @@ class AffiliateApproved implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new Channel('admin-channel'),
-            new Channel('user-channel.' . $this->user_id),
+            new Channel('affiliate-product'),
         ];
     }
 
     public function broadcastAs()
     {
-        return 'affiliate-approved';
+        return 'created';
     }
 }

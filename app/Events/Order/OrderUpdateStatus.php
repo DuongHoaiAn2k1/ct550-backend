@@ -17,9 +17,11 @@ class OrderUpdateStatus implements ShouldBroadcast
     /**
      * Create a new event instance.
      */
-    public function __construct()
+    public $user_id;
+    public function __construct($user_id)
     {
         //
+        $this->user_id = $user_id;
     }
 
     /**
@@ -31,6 +33,7 @@ class OrderUpdateStatus implements ShouldBroadcast
     {
         return [
             new Channel('admin-channel'),
+            new Channel('user-channel.' . $this->user_id),
         ];
     }
 

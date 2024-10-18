@@ -8,9 +8,9 @@ use App\Http\Controllers\API\Affiliate\AffiliateWalletController;
 use App\Http\Controllers\API\Affiliate\AffiliateRequestController;
 use App\Http\Controllers\API\Affiliate\AffiliateWithdrawalController;
 
-Route::prefix('affiliate')->group(function () {
+Route::middleware(['auth', 'role:normal_user|loyal_user|admin|staff'])->prefix('affiliate')->group(function () {
     Route::prefix('/request')->group(function () {
-        Route::post('/create', [AffiliateRequestController::class, 'create']);
+        Route::post('/create', [AffiliateRequestController::class, 'create'])->middleware('permission:affiliate register');
         Route::post('/update', [AffiliateRequestController::class, 'update']);
         Route::get('/list', [AffiliateRequestController::class, 'getAll']);
         Route::patch('/approved/{affiliate_request_id}', [AffiliateRequestController::class, 'approved']);
@@ -18,7 +18,7 @@ Route::prefix('affiliate')->group(function () {
         Route::get('/status/check', [AffiliateRequestController::class, 'checkStatusUser']);
     });
 
-    Route::prefix('/commission')->group(function () {
+    Route::middleware(['auth', 'role:admin'])->prefix('/commission')->group(function () {
         Route::get('/list', [CommissionController::class, 'index']);
         Route::post('/create', [CommissionController::class, 'create']);
         Route::patch('/update/{commission_id}', [CommissionController::class, 'update']);

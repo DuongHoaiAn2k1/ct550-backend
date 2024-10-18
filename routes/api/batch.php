@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\Batch\BatchController;
 
 
-Route::prefix('batches')->group(function () {
+Route::middleware(['auth', 'role:admin|staff|normal_user|loyal_user'])->prefix('batches')->group(function () {
     Route::get('/', [BatchController::class, 'index']);
     Route::get('/hidden', [BatchController::class, 'getHiddenList']);
     Route::get('/expiring-soon', [BatchController::class, 'getExpiringSoon']);

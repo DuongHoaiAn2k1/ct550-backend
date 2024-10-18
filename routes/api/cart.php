@@ -3,14 +3,12 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\Cart\CartController;
 
-Route::prefix('/cart')->group(function () {
-    // Route::get('/', [CartController::class, 'index']);
+Route::middleware(['auth', 'role:normal_user|loyal_user'])->prefix('/cart')->group(function () {
     Route::get('/', [CartController::class, 'get']);
     Route::get('/user/count', [CartController::class, 'count']);
-    Route::post('/', [CartController::class, 'create']);
-    // Route::patch('/{id}', [CartController::class, 'update']);
-    Route::patch('/decrease/{id}', [CartController::class, 'decrease']);
-    Route::patch('/increase/{id}', [CartController::class, 'increase']);
-    Route::delete('/{id}', [CartController::class, 'delete']);
+    Route::post('/', [CartController::class, 'create'])->middleware('permission:add to cart');
+    Route::patch('/decrease/{id}', [CartController::class, 'decrease'])->middleware('permission:decrease cart');
+    Route::patch('/increase/{id}', [CartController::class, 'increase'])->middleware('permission:increase cart');
+    Route::delete('/{id}', [CartController::class, 'delete'])->middleware('permission:delete cart');
     Route::delete('/user/all', [CartController::class, 'delete_by_user_id']);
 });

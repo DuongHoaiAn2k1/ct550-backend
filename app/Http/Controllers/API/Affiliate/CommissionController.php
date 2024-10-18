@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Affiliate;
 use App\Models\Commission;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Events\Affiliate\AffiliateProductCreated;
 
 class CommissionController extends Controller
 {
@@ -41,6 +42,7 @@ class CommissionController extends Controller
             $commission->product_id = $request->product_id;
             $commission->commission_rate = $request->commission_rate;
             $commission->save();
+            event(new AffiliateProductCreated());
             return response([
                 'status' => 'success',
                 'data' => $commission

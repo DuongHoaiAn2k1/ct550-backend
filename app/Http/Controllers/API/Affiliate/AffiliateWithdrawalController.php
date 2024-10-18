@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\API\Affiliate;
 
+use App\Events\Affiliate\AffiliateWithdrawalEvent;
+use App\Events\Affiliate\AffiliateWithdrawalSent;
 use Illuminate\Http\Request;
 use App\Models\AffiliateWallet;
 use App\Models\AffiliateWithdrawal;
@@ -22,6 +24,7 @@ class AffiliateWithdrawalController extends Controller
             $affiliaateWithdrawal->account_number = $request->account_number;
             $affiliaateWithdrawal->account_holder_name = $request->account_holder_name;
             $affiliaateWithdrawal->save();
+            event(new AffiliateWithdrawalEvent());
             return response()->json([
                 'status' => 'success',
                 'message' => 'Tạo yêu cầu rút tiền thành công'
@@ -79,10 +82,10 @@ class AffiliateWithdrawalController extends Controller
             $affiliateWallet = AffiliateWallet::where('affiliate_user_id', $affiliaateWithdrawal->affiliate_user_id)->first();
             $affiliateWallet->balance -= $affiliaateWithdrawal->amount;
             $affiliateWallet->save();
-
+            event(new AffiliateWithdrawalSent());
             return response()->json([
                 'status' => 'success',
-                'message' => 'Xuất bộ thành công'
+                'message' => 'Yêu cầu rút tiền đã được xử lý'
             ], 201);
         } catch (\Exception $e) {
             return response()->json([

@@ -11,8 +11,6 @@ class RoleSeeder extends Seeder
     public function run()
     {
         // Tạo các quyền
-        Permission::create(['name' => 'view products']);
-        Permission::create(['name' => 'search products']);
         Permission::create(['name' => 'add to cart']);
         Permission::create(['name' => 'manage wishlist']);
         Permission::create(['name' => 'place order']);
@@ -38,8 +36,6 @@ class RoleSeeder extends Seeder
         Permission::create(['name' => 'manage affiliate marketers']);
 
         // Tạo các vai trò và gán quyền
-        $guest = Role::create(['name' => 'guest']);
-        $guest->givePermissionTo(['view products', 'search products']);
 
         $normalUser = Role::create(['name' => 'normal_user']);
         $normalUser->givePermissionTo([

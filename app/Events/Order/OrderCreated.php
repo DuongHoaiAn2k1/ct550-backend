@@ -14,12 +14,14 @@ class OrderCreated implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
+    public $user_id;
+
     /**
      * Create a new event instance.
      */
-    public function __construct()
+    public function __construct($user_id)
     {
-        //
+        $this->user_id = $user_id;
     }
 
     /**
@@ -31,6 +33,7 @@ class OrderCreated implements ShouldBroadcast
     {
         return [
             new Channel('admin-channel'),
+            new Channel('user-channel.' . $this->user_id),
         ];
     }
 

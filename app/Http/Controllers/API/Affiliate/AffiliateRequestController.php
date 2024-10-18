@@ -82,7 +82,7 @@ class AffiliateRequestController extends Controller
             $affiliateWallet->affiliate_user_id = $affiliateRequest->user_id;
             $affiliateWallet->balance = 0;
             $affiliateWallet->save();
-            event(new AffiliateApproved());
+            event(new AffiliateApproved($affiliateRequest->user_id));
             return response([
                 'status' => 'success',
                 'data' => $affiliateRequest,
@@ -110,7 +110,7 @@ class AffiliateRequestController extends Controller
             $notification->type = 'user';
             $notification->route_name = 'profile';
             $notification->save();
-            event(new AffiliateRejectedEvent());
+            event(new AffiliateRejectedEvent($affiliateRequest->user_id));
             Mail::to($affiliateRequest->user->email)->send(new AffiliateRequestRejected($request->reason));
             return response([
                 'status' => 'success',

@@ -17,9 +17,11 @@ class AffiliateRejectedEvent implements ShouldBroadcast
     /**
      * Create a new event instance.
      */
-    public function __construct()
+    public $user_id;
+    public function __construct($user_id)
     {
         //
+        $this->user_id = $user_id;
     }
 
     /**
@@ -30,7 +32,7 @@ class AffiliateRejectedEvent implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new Channel('affiliate-rejected'),
+            new Channel('user-channel.' . $this->user_id),
         ];
     }
 

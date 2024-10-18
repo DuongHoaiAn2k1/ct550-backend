@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Order;
 use App\Models\User;
 use App\Models\Order;
 use App\Models\Commission;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use App\Models\AffiliateSale;
 use App\Mail\OrderCreatedMail;
@@ -16,6 +17,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Mail;
 use App\Events\Order\OrderUpdateStatus;
 use Illuminate\Support\Facades\Validator;
+use App\Events\Order\PaymentSetPrepareStatus;
+use App\Http\Controllers\API\Notification\NotificationController;
 
 class OrderController extends Controller
 {
@@ -27,6 +30,23 @@ class OrderController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'Lấy đơn hàng thành công',
+                'data' => $order
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getByBillId($bill_id)
+    {
+        try {
+            $order = Order::with('orderDetail.product')->where('bill_id', $bill_id)->first();
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Get Order SuccessFully',
                 'data' => $order
             ], 200);
         } catch (\Exception $e) {
@@ -137,7 +157,17 @@ class OrderController extends Controller
                     $order->point_used_order = $request->point_used_order;
                     $order->save();
                     $order_id = $order->order_id;
-                    event(new OrderCreated());
+                    if ($request->status == 'preparing') {
+                        $notificationController = new NotificationController();
+                        $notificationRequest = new Request([
+                            'message' => 'Đơn hàng đã đặt thành công',
+                            'route_name' => 'order',
+                            'type' => 'admin'
+                        ]);
+
+                        $notificationController->create($notificationRequest);
+                    }
+                    event(new OrderCreated($order->user_id));
                     return response()->json([
                         'status' => 'success',
                         'data' => $request->all(),
@@ -166,7 +196,7 @@ class OrderController extends Controller
                     $order->point_used_order = $request->point_used_order;
                     $order->save();
                     $order_id = $order->order_id;
-                    event(new OrderCreated());
+                    event(new OrderCreated($order->user_id));
                     return response()->json([
                         'status' => 'success',
                         'data' => $request->all(),
@@ -309,7 +339,7 @@ class OrderController extends Controller
                 }
             }
             $order->save();
-            event(new OrderUpdateStatus());
+            event(new OrderUpdateStatus($order->user_id));
             return response()->json([
                 'status' => 'success',
                 'message' => 'Cập nhật trạng thái đơn hàng thành công',
@@ -327,9 +357,23 @@ class OrderController extends Controller
     {
         try {
             $order = Order::where('bill_id', $bill_id)->first();
+            $lastStatus = $order->status;
             $order->status = $request->status;
             $order->paid = 1;
             $order->save();
+            if ($request->status == 'preparing' && $lastStatus != 'preparing') {
+                $notificationController = new NotificationController();
+                $notificationRequest = new Request([
+                    'message' => 'Đơn hàng đã đặt thành công',
+                    'route_name' => 'order',
+                    'type' => 'admin'
+                ]);
+                $notificationController->create($notificationRequest);
+                $this->sendOrderConfirmationEmail($order->order_id);
+            }
+            // event(new OrderCreated());
+            // event(new OrderUpdateStatus());
+            event(new PaymentSetPrepareStatus());
             return response()->json([
                 'status' => 'success',
                 'message' => 'Cập nhật trạng thái đơn hàng thành công'

@@ -325,3 +325,18 @@ Error response from daemon: No such container: ct550-app
   2024-10-08 13:11:01 Running ['artisan' batch:update-status] ..... 170ms DONE
   ⇂ '/usr/local/bin/php' 'artisan' batch:update-status > '/dev/null' 2>&1  
 
+
+  2024-10-15 21:56:01 Running ['artisan' batch:update-status] ..... 244ms DONE
+  ⇂ '/usr/local/bin/php' 'artisan' batch:update-status > '/dev/null' 2>&1  
+
+
+   INFO  No scheduled commands are ready to run.  
+
+
+  2024-10-15 21:58:01 Running ['artisan' app:update-order-status] . 199ms DONE
+  ⇂ '/usr/local/bin/php' 'artisan' app:update-order-status > '/dev/null' 2>&1  
+
+
+  2024-10-15 21:59:01 Running ['artisan' app:update-order-status] . 168ms DONE
+  ⇂ '/usr/local/bin/php' 'artisan' app:update-order-status > '/dev/null' 2>&1  
+
