@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API\Review;
 
+use App\Events\Review\ReviewCreated;
 use App\Models\Review;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -45,7 +46,7 @@ class ReviewController extends Controller
                     $review->product_id = $request->product_id;
                     $review->user_id = $user_id;
                     $review->save();
-
+                    event(new ReviewCreated());
                     return response()->json([
                         'status' => 'success',
                         'message' => 'Tạo đánh giá thành công'
@@ -79,7 +80,7 @@ class ReviewController extends Controller
     public function delete($id)
     {
         try {
-            $review = Review::find($id);
+            $review = Review::where('review_id', $id)->first();
 
             if (!$review) {
                 return response()->json([
@@ -89,12 +90,12 @@ class ReviewController extends Controller
             }
             // Kiểm tra xem người dùng hiện tại có quyền xóa đánh giá hay không
             // Ở đây, giả sử chỉ người dùng đã tạo đánh giá mới có quyền xóa nó
-            if (auth()->user()->roles != 0) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Bạn không có quyền xóa đánh giá này'
-                ], 403);
-            }
+            // if (auth()->user()->roles != 0) {
+            //     return response()->json([
+            //         'status' => 'error',
+            //         'message' => 'Bạn không có quyền xóa đánh giá này'
+            //     ], 403);
+            // }
 
             $review->delete();
             return response()->json([

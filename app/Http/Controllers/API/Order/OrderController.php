@@ -319,7 +319,7 @@ class OrderController extends Controller
             $order->status = $request->status;
             if ($order->total_cost >= 1000000 && $request->status == 'delivered') {
                 $user = User::where('id', $order->user_id)->first();
-                $user->point = $user->point + 1;
+                $user->point = $user->point + 10;
                 $user->save();
             }
 

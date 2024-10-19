@@ -13,20 +13,20 @@ Route::middleware(['auth', 'role:normal_user|loyal_user|admin|staff'])->prefix('
         Route::post('/create', [AffiliateRequestController::class, 'create'])->middleware('permission:affiliate register');
         Route::post('/update', [AffiliateRequestController::class, 'update']);
         Route::get('/list', [AffiliateRequestController::class, 'getAll']);
-        Route::patch('/approved/{affiliate_request_id}', [AffiliateRequestController::class, 'approved']);
-        Route::patch('/rejected/{affiliate_request_id}', [AffiliateRequestController::class, 'rejected']);
+        Route::patch('/approved/{affiliate_request_id}', [AffiliateRequestController::class, 'approved'])->middleware('permission:manage affiliate marketers');
+        Route::patch('/rejected/{affiliate_request_id}', [AffiliateRequestController::class, 'rejected'])->middleware('permission:manage affiliate marketers');
         Route::get('/status/check', [AffiliateRequestController::class, 'checkStatusUser']);
     });
 
-    Route::middleware(['auth', 'role:admin'])->prefix('/commission')->group(function () {
+    Route::middleware(['auth', 'role:admin|affiliate_marketer'])->prefix('/commission')->group(function () {
         Route::get('/list', [CommissionController::class, 'index']);
-        Route::post('/create', [CommissionController::class, 'create']);
-        Route::patch('/update/{commission_id}', [CommissionController::class, 'update']);
-        Route::delete('/delete/{commission_id}', [CommissionController::class, 'delete']);
+        Route::post('/create', [CommissionController::class, 'create'])->middleware('permission:manage commission');
+        Route::patch('/update/{commission_id}', [CommissionController::class, 'update'])->middleware('permission:manage commission');
+        Route::delete('/delete/{commission_id}', [CommissionController::class, 'delete'])->middleware('permission:manage commission');
     });
 
     Route::prefix('/link')->group(function () {
-        Route::post('/generate/{product_id}', [AffiliateLinkController::class, 'generateLink']);
+        Route::post('/generate/{product_id}', [AffiliateLinkController::class, 'generateLink'])->middleware('permission:get affiliate link');
         Route::get('/get-by-user', [AffiliateLinkController::class, 'getByUser']);
     });
 
@@ -42,10 +42,10 @@ Route::middleware(['auth', 'role:normal_user|loyal_user|admin|staff'])->prefix('
     });
 
     Route::prefix('/withdrawal')->group(function () {
-        Route::post('/create', [AffiliateWithdrawalController::class, 'create']);
+        Route::post('/create', [AffiliateWithdrawalController::class, 'create'])->middleware('permission:create withdrawal request');
         Route::get('/get-by-user', [AffiliateWithdrawalController::class, 'getByUser']);
         Route::get('/get-all', [AffiliateWithdrawalController::class, 'getAll']);
-        Route::patch('/update/{affiliate_withdrawal_id}', [AffiliateWithdrawalController::class, 'done']);
-        Route::delete('/delete/{affiliate_withdrawal_id}', [AffiliateWithdrawalController::class, 'delete']);
+        Route::patch('/update/{affiliate_withdrawal_id}', [AffiliateWithdrawalController::class, 'done'])->middleware('permission:manage affiliate marketers');
+        Route::delete('/delete/{affiliate_withdrawal_id}', [AffiliateWithdrawalController::class, 'delete'])->middleware('permission:manage affiliate marketers');
     });
 });

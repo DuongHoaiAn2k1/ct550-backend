@@ -122,12 +122,11 @@ class OrderDetailController extends Controller
     public function checkUserPurchasedProduct($product_id)
     {
         try {
-            // Lấy user_id của người dùng đang đăng nhập
             $user_id = auth()->id();
 
             // Kiểm tra xem có order_detail nào chứa product_id nhất định của người dùng không
             $orderDetail = OrderDetail::whereHas('order', function ($query) use ($user_id) {
-                $query->where('user_id', $user_id);
+                $query->where('user_id', $user_id)->where('status', 'delivered');
             })->where('product_id', $product_id)->exists();
 
             if ($orderDetail) {

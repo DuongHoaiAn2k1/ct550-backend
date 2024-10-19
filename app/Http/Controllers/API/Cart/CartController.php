@@ -17,7 +17,7 @@ class CartController extends Controller
     {
         try {
             $user_id = auth()->user()->id;
-            $listCart = Cart::where('user_id', $user_id)->get();
+            $listCart = Cart::where('user_id', $user_id)->with('product')->with('product.product_promotion')->with('product.product_promotion.promotion')->get();
             return response()->json([
                 'status' => 'success',
                 'message' => 'Lấy giỏ hàng thành công',
