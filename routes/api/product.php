@@ -6,9 +6,9 @@ use App\Http\Controllers\API\Product\ProductBatchController;
 
 Route::prefix('/product')->group(function () {
     Route::get('/', [ProductController::class, 'index']);
-    Route::get('/category/group', [ProductController::class, 'indexGroupedByCategory']);
+    // Route::get('/category/group', [ProductController::class, 'indexGroupedByCategory']);
     Route::post('/name', [ProductController::class, 'getProductByCategoryName']);
-    Route::post('/get/name/list', [ProductController::class, 'getProductByName']);
+    // Route::post('/get/name/list', [ProductController::class, 'getProductByName']);
     Route::get('/{id}', [ProductController::class, 'get']);
     Route::post('/decrease/product/quantity', [ProductController::class, 'decreaseProductQuantity']);
     Route::post('/increase/product/quantity', [ProductController::class, 'increaseProductQuantity']);

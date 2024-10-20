@@ -36,16 +36,33 @@ class ProductController extends Controller
 
                     if (auth()->check()) {
                         $user_id = auth()->user()->id;
+                        $roles = auth()->user()->getRoleNames();
+
+                        $mainRole = $roles->filter(function ($role) {
+                            return $role !== 'affiliate_marketer';
+                        })->first();
                         // Kiểm tra xem sản phẩm này có nằm trong danh sách yêu thích của người dùng hay không
                         $is_favorite = Favorite::where('user_id', $user_id)
                             ->where('product_id', $product->product_id)
                             ->exists();
 
-                        // Thêm trường 'like' cho sản phẩm
                         $product->liked = $is_favorite;
+
+                        $product->product_promotion = $product->product_promotion->filter(function ($promotion) use ($mainRole) {
+                            $user_groups = json_decode($promotion->promotion->user_group, true);
+
+                            if (is_array($user_groups) && in_array($mainRole, $user_groups)) {
+                                return true;
+                            }
+                            return false;
+                        });
+
+                        if ($product->product_promotion->isEmpty()) {
+                            unset($product->product_promotion);
+                        }
                     } else {
-                        // Nếu người dùng không đăng nhập, trường 'like' sẽ là false
                         $product->liked = false;
+                        unset($product->product_promotion);
                     }
                     return $product;
                 });
@@ -63,28 +80,28 @@ class ProductController extends Controller
             ], 500);
         }
     }
-    public function indexGroupedByCategory()
-    {
-        try {
-            $groupedProducts = Product::all()->groupBy('category_id');
+    // public function indexGroupedByCategory()
+    // {
+    //     try {
+    //         $groupedProducts = Product::all()->groupBy('category_id');
 
-            $groupedProductsArray = [];
-            foreach ($groupedProducts as $categoryId => $products) {
-                $groupedProductsArray[$categoryId] = $products->toArray();
-            }
+    //         $groupedProductsArray = [];
+    //         foreach ($groupedProducts as $categoryId => $products) {
+    //             $groupedProductsArray[$categoryId] = $products->toArray();
+    //         }
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Lấy danh sách sản phẩm được nhóm theo category_id thành công',
-                'groupedProducts' => $groupedProductsArray
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
-        }
-    }
+    //         return response()->json([
+    //             'status' => 'success',
+    //             'message' => 'Lấy danh sách sản phẩm được nhóm theo category_id thành công',
+    //             'groupedProducts' => $groupedProductsArray
+    //         ], 200);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
 
     public function get($id)
     {
@@ -104,20 +121,36 @@ class ProductController extends Controller
 
                     // Thêm các thuộc tính vào sản phẩm
                     $product->available_quantity = $available_quantity;
-                    $product->average_rating = $average_rating ? round($average_rating, 2) : null; // Làm tròn đến 2 chữ số thập phân
+                    $product->average_rating = $average_rating ? round($average_rating, 2) : null;
 
                     if (auth()->check()) {
                         $user_id = auth()->user()->id;
-                        // Kiểm tra xem sản phẩm này có nằm trong danh sách yêu thích của người dùng hay không
+                        $roles = auth()->user()->getRoleNames();
+
+                        $mainRole = $roles->filter(function ($role) {
+                            return $role !== 'affiliate_marketer';
+                        })->first();
                         $is_favorite = Favorite::where('user_id', $user_id)
                             ->where('product_id', $product->product_id)
                             ->exists();
 
-                        // Thêm trường 'like' cho sản phẩm
                         $product->liked = $is_favorite;
+
+                        $product->product_promotion = $product->product_promotion->filter(function ($promotion) use ($mainRole) {
+                            $user_groups = json_decode($promotion->promotion->user_group, true);
+
+                            if (is_array($user_groups) && in_array($mainRole, $user_groups)) {
+                                return true;
+                            }
+                            return false;
+                        });
+
+                        if ($product->product_promotion->isEmpty()) {
+                            unset($product->product_promotion);
+                        }
                     } else {
-                        // Nếu người dùng không đăng nhập, trường 'like' sẽ là false
                         $product->liked = false;
+                        unset($product->product_promotion);
                     }
                     return $product;
                 });
@@ -170,6 +203,11 @@ class ProductController extends Controller
                     // Kiểm tra nếu người dùng đã đăng nhập
                     if (auth()->check()) {
                         $user_id = auth()->user()->id;
+                        $roles = auth()->user()->getRoleNames();
+
+                        $mainRole = $roles->filter(function ($role) {
+                            return $role !== 'affiliate_marketer';
+                        })->first();
                         // Kiểm tra xem sản phẩm này có nằm trong danh sách yêu thích của người dùng hay không
                         $is_favorite = Favorite::where('user_id', $user_id)
                             ->where('product_id', $product->product_id)
@@ -177,9 +215,23 @@ class ProductController extends Controller
 
                         // Thêm trường 'like' cho sản phẩm
                         $product->liked = $is_favorite;
+
+                        $product->product_promotion = $product->product_promotion->filter(function ($promotion) use ($mainRole) {
+                            $user_groups = json_decode($promotion->promotion->user_group, true);
+
+                            if (is_array($user_groups) && in_array($mainRole, $user_groups)) {
+                                return true;
+                            }
+                            return false;
+                        });
+
+                        if ($product->product_promotion->isEmpty()) {
+                            unset($product->product_promotion);
+                        }
                     } else {
                         // Nếu người dùng không đăng nhập, trường 'like' sẽ là false
                         $product->liked = false;
+                        unset($product->product_promotion);
                     }
 
                     return $product;
@@ -199,31 +251,31 @@ class ProductController extends Controller
     }
 
 
-    public function getProductByName(Request $request)
-    {
-        try {
-            $productName = $request->product_name;
-            if (empty($productName)) {
-                return response()->json([
-                    'status' => 'success',
-                    'message' => 'Lấy danh sách sản phẩm thành công',
-                    'data' => ""
-                ], 200);
-            }
-            $products = Product::where('product_name', 'like', "%$productName%")->get();
+    // public function getProductByName(Request $request)
+    // {
+    //     try {
+    //         $productName = $request->product_name;
+    //         if (empty($productName)) {
+    //             return response()->json([
+    //                 'status' => 'success',
+    //                 'message' => 'Lấy danh sách sản phẩm thành công',
+    //                 'data' => ""
+    //             ], 200);
+    //         }
+    //         $products = Product::where('product_name', 'like', "%$productName%")->get();
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Lấy danh sách sản phẩm thành công',
-                'data' => $products
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
-        }
-    }
+    //         return response()->json([
+    //             'status' => 'success',
+    //             'message' => 'Lấy danh sách sản phẩm thành công',
+    //             'data' => $products
+    //         ], 200);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
 
     public function decreaseProductQuantity(Request $request)
     {
