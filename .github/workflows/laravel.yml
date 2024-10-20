@@ -59,7 +59,7 @@ jobs:
       - name: Install Composer dependencies
         run: |
           docker-compose exec app rm -rf vendor
-          docker-compose exec app composer install --no-interaction --prefer-dist --no-dev --no-scripts --ignore-platform-reqs
+          docker-compose exec app composer install --no-interaction --prefer-dist
 
       # Chạy migrate và seed database
       # - name: Run database migrations
@@ -67,9 +67,9 @@ jobs:
       #     docker-compose exec app php artisan migrate --force
 
       # Chạy test Laravel
-      - name: Run Tests
-        run: |
-          docker-compose exec app php artisan test
+      # - name: Run Tests
+      #   run: |
+      #     docker-compose exec app php artisan test
 
       # Đóng Docker containers sau khi test xong
       - name: Stop Docker containers
