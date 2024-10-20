@@ -58,7 +58,7 @@ jobs:
       # Cài đặt Composer dependencies
       - name: Install Composer dependencies
         run: |
-          docker-compose exec app composer install --no-interaction --prefer-dist
+          docker-compose exec app composer install --no-interaction --prefer-dist --no-dev
 
       # Chạy migrate và seed database
       - name: Run database migrations
