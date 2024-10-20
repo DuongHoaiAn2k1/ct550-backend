@@ -123,10 +123,7 @@ jobs:
             # Chạy Docker Compose
             docker-compose down
             docker-compose up -d --build
-      
-            # Chạy migrations (nếu cần)
-            docker-compose exec -T app php artisan migrate --force
-      
+             
             echo "Deployment completed successfully!"
           EOF
 
