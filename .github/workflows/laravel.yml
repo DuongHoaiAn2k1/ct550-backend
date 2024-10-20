@@ -106,7 +106,10 @@ jobs:
               # Nếu repository đã tồn tại, cập nhật URL remote nếu cần
               git remote set-url origin git@github.com:DuongHoaiAn2k1/ct550-backend.git
             fi
-
+      
+            # Cấu hình Git để sử dụng SSH key cụ thể
+            git config core.sshCommand "ssh -i ~/.ssh/ct550-pub -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+      
             # Pull code mới nhất
             git fetch --all
             git reset --hard origin/main
