@@ -55,13 +55,6 @@ jobs:
         run: |
           docker-compose -f docker-compose.yml up -d
 
-      # Cài đặt Composer dependencies
-      - name: Install Composer dependencies
-        run: |
-          docker-compose exec app rm -rf vendor composer.lock
-          docker-compose exec app composer self-update
-          docker-compose exec app composer install --no-interaction --prefer-dist
-
       # Chạy migrate và seed database
       # - name: Run database migrations
       #   run: |
