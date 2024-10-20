@@ -58,7 +58,8 @@ jobs:
       # Cài đặt Composer dependencies
       - name: Install Composer dependencies
         run: |
-          docker-compose exec app rm -rf vendor
+          docker-compose exec app rm -rf vendor composer.lock
+          docker-compose exec app composer self-update
           docker-compose exec app composer install --no-interaction --prefer-dist
 
       # Chạy migrate và seed database
@@ -112,7 +113,7 @@ jobs:
               # Nếu repository đã tồn tại, cập nhật URL remote nếu cần
               git remote set-url origin git@github.com:DuongHoaiAn2k1/ct550-backend.git
             fi
-            
+
             # Pull code mới nhất
             git fetch --all
             git reset --hard origin/main
