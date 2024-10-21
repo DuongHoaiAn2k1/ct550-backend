@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\User\UserController;
 
 
-Route::middleware(['auth', 'role:normal_user|loyal_user|admin|staff'])->prefix('/user')->group(function () {
+Route::prefix('/user')->group(function () {
     Route::post('/reset/password/user', [UserController::class, 'resetPassword']);
     Route::get('/list-user', [UserController::class, 'getListUser']);
     Route::get('/list-user/{role}', [UserController::class, 'getListUsersByRole']);

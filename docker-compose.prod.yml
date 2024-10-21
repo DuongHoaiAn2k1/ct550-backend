@@ -44,7 +44,7 @@ services:
     restart: unless-stopped
     image: nginx:latest
     volumes:
-      - ./docker/nginx/conf.d/default.conf:/etc/nginx/conf.d/production.conf
+      - ./docker/nginx/conf.d/production.conf:/etc/nginx/conf.d/production.conf
       - ./docker/nginx/ssl:/etc/nginx/ssl
       - ./storage:/var/www/storage
     ports:

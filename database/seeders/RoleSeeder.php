@@ -34,6 +34,8 @@ class RoleSeeder extends Seeder
         Permission::create(['name' => 'manage address']);
         Permission::create(['name' => 'manage commission']);
         Permission::create(['name' => 'get affiliate link']);
+        Permission::create(['name' => 'create withdrawal request']);
+        Permission::create(['name' => 'delete products']);
 
         // Tạo các vai trò và gán quyền
 
