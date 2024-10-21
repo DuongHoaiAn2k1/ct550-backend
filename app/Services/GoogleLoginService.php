@@ -62,7 +62,7 @@ class GoogleLoginService
                   role: '" . base64_encode($mainRole) . "',
                   affiliate_role: '$affiliateRole',
                   google_id: '$user->google_id'
-                }, 'https://client.dacsancamau.com:3001');
+                }, 'https://client.luanvantotnghiep.io.vn');
                 window.close();
               </script>";
         } catch (\Exception $e) {
