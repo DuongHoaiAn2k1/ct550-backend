@@ -95,8 +95,8 @@ jobs:
             set -e
             
             # Kiểm tra và tạo thư mục dự án nếu chưa tồn tại
-            mkdir -p ct550
-            cd ct550
+            mkdir -p /var/www/ct550
+            cd /var/www/ct550
       
             # Khởi tạo Git repository nếu chưa tồn tại
             if [ ! -d .git ]; then
