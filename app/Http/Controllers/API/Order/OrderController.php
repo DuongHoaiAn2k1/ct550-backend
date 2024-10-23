@@ -113,20 +113,27 @@ class OrderController extends Controller
     public function create(Request $request)
     {
         try {
+            // Bắt đầu transaction
+            DB::beginTransaction();
+
+            // Custom message cho việc validate
             $customMessage = [
                 'bill_id.required' => 'Mã đơn hàng không được để trống.',
                 'status.required' => 'Mã trạng thái không được để trống.',
                 'paid.required' =>  'Trạng thái thanh toán không được để trống',
                 'shipping_fee.required' => "Phí ship không được để trống",
-                'total_cost.required' => 'Tổng giá tiền không được để trống'
+                'total_cost.required' => 'Tổng giá tiền không được để trống',
+                'order_details.required' => 'Chi tiết đơn hàng không được để trống.',
             ];
 
+            // Validate cho đơn hàng
             $validate = Validator::make($request->all(), [
                 'bill_id' => 'required',
                 'status' => 'required',
                 'paid' => 'required',
                 'shipping_fee' => 'required',
-                'total_cost' => 'required'
+                'total_cost' => 'required',
+                'order_details' => 'required|array', // Đảm bảo có chi tiết đơn hàng
             ], $customMessage);
 
             if ($validate->fails()) {
@@ -136,76 +143,132 @@ class OrderController extends Controller
                     'message' => 'Validation failed',
                     'errors' => $errors
                 ], 422);
-            } else {
-                if (isset($request->pay_method) && $request->pay_method == "cod") {
-                    $order = new Order();
-                    $order->bill_id = $request->bill_id;
-                    $order->status = $request->status;
-                    $order->user_id = auth()->user()->id;
-                    $order_address = [
-                        'address' => $request->address,
-                        'commue' => $request->commue,
-                        'district' => $request->district,
-                        'city' => $request->city,
-                        'phone' => $request->phone,
-                        'name' => $request->name
-                    ];
-                    $order->order_address = json_encode($order_address);
-                    $order->paid = $request->paid;
-                    $order->shipping_fee = $request->shipping_fee;
-                    $order->total_cost = $request->total_cost;
-                    $order->point_used_order = $request->point_used_order;
-                    $order->save();
-                    $order_id = $order->order_id;
-                    if ($request->status == 'preparing') {
-                        $notificationController = new NotificationController();
-                        $notificationRequest = new Request([
-                            'message' => 'Đơn hàng đã đặt thành công',
-                            'route_name' => 'order',
-                            'type' => 'admin'
-                        ]);
+            }
 
-                        $notificationController->create($notificationRequest);
+            // Tạo đơn hàng
+            $order = new Order();
+            $order->bill_id = $request->bill_id;
+            $order->status = $request->status;
+            $order->user_id = auth()->user()->id;
+            $order_address = [
+                'address' => $request->address,
+                'commue' => $request->commue,
+                'district' => $request->district,
+                'city' => $request->city,
+                'phone' => $request->phone,
+                'name' => $request->name
+            ];
+            $order->order_address = json_encode($order_address);
+            $order->paid = $request->paid;
+            $order->shipping_fee = $request->shipping_fee;
+            $order->total_cost = $request->total_cost;
+            $order->point_used_order = $request->point_used_order;
+            $order->pay_method = $request->pay_method;
+            $order->save();
+
+            // Xử lý trừ stock trực tiếp
+            foreach ($request->order_details as $orderDetailData) {
+                $product_id = $orderDetailData['product_id'];
+                $quantity_to_reduce = $orderDetailData['quantity'];
+
+                $date_threshold = now()->addDays(15);
+
+                // Lấy các batch còn stock của sản phẩm
+                $batches = Batch::where('product_id', $product_id)
+                    ->where('status', 'Active')
+                    ->where('expiry_date', '>', $date_threshold)
+                    ->orderBy('entry_date', 'asc')
+                    ->lockForUpdate()
+                    ->get();
+
+                $batchDetails = [];
+
+                foreach ($batches as $batch) {
+                    if ($quantity_to_reduce <= 0) {
+                        break;
                     }
-                    event(new OrderCreated($order->user_id));
-                    return response()->json([
-                        'status' => 'success',
-                        'data' => $request->all(),
-                        'order_id' => $order_id,
-                        'message' => 'Tạo đơn hàng thành công'
-                    ], 201);
-                } else {
-                    $order = new Order();
-                    $order->bill_id = $request->bill_id;
-                    $order->status = $request->status;
-                    $order->user_id = auth()->user()->id;
-                    $order_address = [
-                        'address' => $request->address,
-                        'commue' => $request->commue,
-                        'district' => $request->district,
-                        'city' => $request->city,
-                        'phone' => $request->phone,
-                        'name' => $request->name
-                    ];
-                    $order->order_address = json_encode($order_address);
 
-                    $order->paid = 0;
-                    $order->pay_method = $request->pay_method;
-                    $order->shipping_fee = $request->shipping_fee;
-                    $order->total_cost = $request->total_cost;
-                    $order->point_used_order = $request->point_used_order;
-                    $order->save();
-                    $order_id = $order->order_id;
-                    event(new OrderCreated($order->user_id));
+                    if ($batch->quantity >= $quantity_to_reduce) {
+                        $batch->quantity -= $quantity_to_reduce;
+                        $batch->sold_quantity += $quantity_to_reduce;
+                        $batch->save();
+
+                        $batchDetails[] = [
+                            'batch_id' => $batch->batch_id,
+                            'quantity' => $quantity_to_reduce
+                        ];
+                        $quantity_to_reduce = 0;
+                    } else {
+                        $quantity_to_reduce -= $batch->quantity;
+
+                        $batchDetails[] = [
+                            'batch_id' => $batch->batch_id,
+                            'quantity' => $batch->quantity
+                        ];
+                        $batch->sold_quantity += $batch->quantity;
+                        $batch->quantity = 0;
+                        $batch->save();
+                    }
+                }
+
+                // Kiểm tra nếu không đủ stock
+                if ($quantity_to_reduce > 0) {
+                    DB::rollBack();
                     return response()->json([
-                        'status' => 'success',
-                        'data' => $request->all(),
-                        'order_id' => $order_id,
-                        'message' => 'Tạo đơn hàng thành công'
-                    ], 201);
+                        'status' => 'error',
+                        'message' => 'Not enough stock to fulfill the order.'
+                    ], 400);
+                }
+
+                // Tạo chi tiết đơn hàng
+                $orderDetail = new OrderDetail();
+                $orderDetail->order_id = $order->order_id;
+                $orderDetail->product_id = $orderDetailData['product_id'];
+                $orderDetail->quantity = $orderDetailData['quantity'];
+                $orderDetail->total_cost_detail = $orderDetailData['total_cost_detail'];
+                $orderDetail->save();
+
+                // Lưu các chi tiết batch
+                foreach ($batchDetails as $batchDetail) {
+                    DB::table('order_detail_batches')->insert([
+                        'order_detail_id' => $orderDetail->order_detail_id,
+                        'batch_id' => $batchDetail['batch_id'],
+                        'quantity' => $batchDetail['quantity'],
+                    ]);
                 }
             }
+
+            // Giảm điểm tích lũy của người dùng nếu có sử dụng điểm
+            if ($order->point_used_order > 0) {
+                $user = auth()->user();
+
+                if ($user->point < $order->point_used_order) {
+                    DB::rollBack();
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'User does not have enough points.'
+                    ], 400);
+                }
+
+                // Giảm số điểm của người dùng
+                $user->point -= $order->point_used_order;
+                $user->point_used += $order->point_used_order;
+                $user->save();
+            }
+
+            // Hoàn thành transaction
+            DB::commit();
+
+            event(new OrderCreated($order->user_id));
+
+            return response()->json([
+                'status' => 'success',
+                'order_id' => $order->order_id,
+                'message' => 'Tạo đơn hàng và chi tiết đơn hàng thành công'
+            ], 201);
         } catch (\Exception $e) {
+            // Rollback nếu có lỗi
+            DB::rollBack();
             return response()->json([
                 'status' => 'error',
                 'message' => $e->getMessage()
