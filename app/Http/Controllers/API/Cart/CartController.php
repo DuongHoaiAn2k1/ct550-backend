@@ -17,7 +17,38 @@ class CartController extends Controller
     {
         try {
             $user_id = auth()->user()->id;
-            $listCart = Cart::where('user_id', $user_id)->with('product')->with('product.product_promotion')->with('product.product_promotion.promotion')->get();
+            $listCart = Cart::where('user_id', $user_id)
+                ->with('product', 'product.product_promotion', 'product.product_promotion.promotion')
+                ->get()
+                ->map(function ($cartItem) {
+                    $product = $cartItem->product;
+                    if (auth()->check()) {
+                        $user_id = auth()->user()->id;
+                        $roles = auth()->user()->getRoleNames();
+
+                        $mainRole = $roles->filter(function ($role) {
+                            return $role !== 'affiliate_marketer';
+                        })->first();
+                        $product->product_promotion = $product->product_promotion->filter(function ($promotion) use ($mainRole) {
+                            $user_groups = json_decode($promotion->promotion->user_group, true);
+
+                            if (is_array($user_groups) && in_array($mainRole, $user_groups)) {
+                                return true;
+                            }
+                            return false;
+                        });
+
+                        if ($product->product_promotion->isEmpty()) {
+                            unset($product->product_promotion);
+                        }
+                    } else {
+                        unset($product->product_promotion);
+                    }
+
+                    $cartItem->product = $product;
+                    return $cartItem;
+                });
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Lấy giỏ hàng thành công',
@@ -30,6 +61,7 @@ class CartController extends Controller
             ], 500);
         }
     }
+
 
     public function create(Request $request)
     {
