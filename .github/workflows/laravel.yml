@@ -68,7 +68,7 @@ jobs:
       # Đóng Docker containers sau khi test xong
       - name: Stop Docker containers
         run: |
-          docker-compose -f docker-compose.prod.yml down
+          docker-compose down
   deploy:
     runs-on: ubuntu-latest
     needs: build
@@ -121,7 +121,7 @@ jobs:
             fi
       
             # Chạy Docker Compose
-            docker-compose -f docker-compose.prod.yml down
+            docker-compose down
             docker-compose -f docker-compose.prod.yml up -d --build
              
             echo "Deployment completed successfully!"

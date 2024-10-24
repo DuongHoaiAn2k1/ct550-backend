@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\API\Order;
 
 use App\Models\User;
+use App\Models\Batch;
 use App\Models\Order;
 use App\Models\Commission;
+use App\Models\OrderDetail;
 use App\Models\Notification;
 use Illuminate\Http\Request;
 use App\Models\AffiliateSale;
