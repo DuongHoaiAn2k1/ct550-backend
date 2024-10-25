@@ -113,6 +113,9 @@ jobs:
             # Pull code mới nhất
             git fetch --all
             git reset --hard origin/main
+
+            # Xóa các mạng Docker không cần thiết
+            docker network prune -f
       
             # Chạy Docker Compose
             docker-compose down
