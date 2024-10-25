@@ -279,12 +279,15 @@ class OrderController extends Controller
         }
     }
 
-
-
     public function sendOrderConfirmationEmail($order_id)
     {
         try {
-            $order = Order::with('orderDetail.product')->where('order_id', $order_id)->first();
+            // Lấy thông tin đơn hàng với chi tiết sản phẩm và khuyến mãi
+            $order = Order::with('orderDetail.product')
+                ->with('orderDetail.product.product_promotion')
+                ->with('orderDetail.product.product_promotion.promotion')
+                ->where('order_id', $order_id)
+                ->first();
 
             if (!$order) {
                 return response()->json([
@@ -293,11 +296,51 @@ class OrderController extends Controller
                 ], 404);
             }
 
-            Mail::to(auth()->user()->email)->send(new OrderCreatedMail($order));
+            // Lấy user_id từ order để lấy thông tin người dùng
+            $user = User::find($order->user_id);
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Người dùng không tồn tại'
+                ], 404);
+            }
+
+            // Lấy danh sách vai trò của người dùng
+            $roles = $user->getRoleNames();
+
+            // Xác định vai trò chính của người dùng (ngoại trừ vai trò 'affiliate_marketer')
+            $mainRole = $roles->filter(function ($role) {
+                return $role !== 'affiliate_marketer';
+            })->first();
+
+            // Lặp qua từng chi tiết sản phẩm trong đơn hàng và áp dụng logic khuyến mãi
+            $order->orderDetail->map(function ($orderDetail) use ($mainRole) {
+                $product = $orderDetail->product;
+
+                // Lọc khuyến mãi dựa trên vai trò của người dùng
+                $product->product_promotion = $product->product_promotion->filter(function ($promotion) use ($mainRole) {
+                    $user_groups = json_decode($promotion->promotion->user_group, true);
+
+                    if (is_array($user_groups) && in_array($mainRole, $user_groups)) {
+                        return true;
+                    }
+                    return false;
+                });
+
+                if ($product->product_promotion->isEmpty()) {
+                    unset($product->product_promotion);
+                }
+
+                return $orderDetail;
+            });
+
+            // Gửi email xác nhận đơn hàng (giả lập)
+            Mail::to($user->email)->send(new OrderCreatedMail($order));
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Email xác nhận đơn hàng đã được gửi'
+                'message' => 'Email xác nhận đơn hàng đã được gửi',
+                'data' => $order
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -306,6 +349,7 @@ class OrderController extends Controller
             ], 500);
         }
     }
+
 
 
     public function delete($id)
