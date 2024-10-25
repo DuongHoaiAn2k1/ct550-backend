@@ -264,6 +264,16 @@ class OrderController extends Controller
 
             event(new OrderCreated($order->user_id));
 
+            if ($request->status == 'preparing') {
+                $notificationController = new NotificationController();
+                $notificationRequest = new Request(query: [
+                    'message' => 'Đơn hàng đã đặt thành công',
+                    'route_name' => 'order',
+                    'type' => 'admin'
+                ]);
+                $notificationController->create($notificationRequest);
+            }
+
             return response()->json([
                 'status' => 'success',
                 'order_id' => $order->order_id,
