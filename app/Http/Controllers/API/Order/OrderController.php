@@ -462,10 +462,30 @@ class OrderController extends Controller
             }
             $order->save();
             event(new OrderUpdateStatus($order->user_id));
+
+            $totalCostSum = 0;
+            if ($request->status == 'delivered') {
+                $totalCostSum = Order::where('user_id', $order->user_id)->where('status', 'delivered')->sum('total_cost');
+                if ($totalCostSum >= 10000000) {
+                    $user = User::where('id', $order->user_id)->first();
+                    $roles = $user->getRoleNames();
+                    if (!in_array('loyal_customer', $roles)) {
+                        $user->removeRole('normal_user');
+                        $user->assignRole('loyal_customer');
+
+                        $notification = new Notification();
+                        $notification->user_id = $order->user_id;
+                        $notification->message = 'Chúc mừng bạn đã trở thành khách hàng thân thiết';
+                        $notification->type = 'user';
+                        $notification->route_name = '';
+                        $notification->save();
+                    }
+                }
+            }
             return response()->json([
                 'status' => 'success',
                 'message' => 'Cập nhật trạng thái đơn hàng thành công',
-                'data' => $order
+                'data' => $order,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
