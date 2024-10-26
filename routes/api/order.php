@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\Order\OrderController;
 
 
-Route::middleware(['auth', 'role:admin|staff|normal_user|loyal_user'])->prefix('/order')->group(function () {
+Route::middleware(['auth', 'role:admin|staff|normal_user|loyal_customer'])->prefix('/order')->group(function () {
     Route::get('/{id}', [OrderController::class, 'get']);
     Route::get('/bill/{id}', [OrderController::class, 'getByBillId']);
     Route::get('/user/get',  [OrderController::class, 'get_by_user']);

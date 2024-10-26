@@ -8,7 +8,7 @@ use App\Http\Controllers\API\Affiliate\AffiliateWalletController;
 use App\Http\Controllers\API\Affiliate\AffiliateRequestController;
 use App\Http\Controllers\API\Affiliate\AffiliateWithdrawalController;
 
-Route::middleware(['auth', 'role:normal_user|loyal_user|admin|staff'])->prefix('affiliate')->group(function () {
+Route::middleware(['auth', 'role:normal_user|loyal_customer|admin|staff'])->prefix('affiliate')->group(function () {
     Route::prefix('/request')->group(function () {
         Route::post('/create', [AffiliateRequestController::class, 'create'])->middleware('permission:affiliate register');
         Route::post('/update', [AffiliateRequestController::class, 'update']);
