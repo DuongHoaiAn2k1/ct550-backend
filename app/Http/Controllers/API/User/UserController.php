@@ -132,6 +132,11 @@ class UserController extends Controller
     {
         try {
             $data = User::find($id);
+            $roles = $data->getRoleNames();
+            $mainRole = $roles->filter(function ($role) {
+                return $role !== 'affiliate_marketer';
+            })->first();
+            $data->role = $mainRole;
 
             return response()->json([
                 'status' => 'success',
