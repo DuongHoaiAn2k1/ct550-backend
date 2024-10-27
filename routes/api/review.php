@@ -9,4 +9,6 @@ Route::middleware(['auth', 'role:normal_user|loyal_customer|admin|staff'])->pref
     Route::post('/', [ReviewController::class, 'create'])->middleware('permission:review products');
     Route::post('/check/{id}', [ReviewController::class, 'userHasReviewedProduct']);
     Route::delete('/{id}', [ReviewController::class, 'delete']);
+    Route::patch('/reply/{id}', [ReviewController::class, 'reply']);
+    Route::patch('/update/{id}', [ReviewController::class, 'updateReview']);
 });
