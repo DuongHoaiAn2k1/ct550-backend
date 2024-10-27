@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API\Review;
 
+use App\Events\Review\ReplyComment;
 use App\Events\Review\ReviewCreated;
 use App\Models\Review;
 use Illuminate\Http\Request;
@@ -60,6 +61,56 @@ class ReviewController extends Controller
             ], 500);
         }
     }
+
+
+    public function reply(Request $request, $id)
+    {
+        try {
+            $reply = $request->reply;
+            $review = Review::where('review_id', $id)->first();
+            $review->reply = $reply;
+            $review->save();
+
+            event(new ReplyComment());
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Trả lời đánh giá thành công',
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function updateReview(Request $request, $id)
+    {
+        try {
+            $review = Review::where('review_id', $id)->first();
+            $userId = auth()->user()->id;
+            if ($review->user_id != $userId) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Bạn không phải quyền thay đổi đánh giá'
+                ], 500);
+            }
+            $review->rating = $request->rating;
+            $review->comment = $request->comment;
+            $review->save();
+            event(new ReviewCreated());
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Cập nhật đánh giá thành công'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function getAll()
     {
         try {
