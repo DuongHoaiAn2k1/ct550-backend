@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\Batch\BatchController;
 
 
-Route::middleware(['auth', 'role:admin|staff|normal_user|loyal_user'])->prefix('batches')->group(function () {
+Route::middleware(['auth', 'role:admin|staff|normal_user|loyal_customer'])->prefix('batches')->group(function () {
     Route::get('/', [BatchController::class, 'index']);
     Route::get('/hidden', [BatchController::class, 'getHiddenList']);
     Route::get('/expiring-soon', [BatchController::class, 'getExpiringSoon']);
@@ -17,4 +17,5 @@ Route::middleware(['auth', 'role:admin|staff|normal_user|loyal_user'])->prefix('
     Route::post('/check/product', [BatchController::class, 'checkStockAvailability']);
     Route::post('/check/product/stock/{product_id}', [BatchController::class, 'checkProductInStock']);
     Route::patch('/status/{batch_id}', [BatchController::class, 'updateStatus']);
+    Route::get('/{batch_id}/detail', [BatchController::class, 'getBatchDetailsById']);
 });
