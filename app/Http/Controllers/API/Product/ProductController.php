@@ -22,7 +22,7 @@ class ProductController extends Controller
                 ->get()
                 ->map(function ($product) {
                     // Tính tổng số lượng còn trong kho từ các lô hàng còn hạn trên 15 ngày
-                    $available_quantity = (int) Batch::where('product_id', $product->product_id)
+                    $available_quantity = (int) Batch::where('product_id', $product->product_id)->where('status', 'Active')
                         ->where('expiry_date', '>', now()->addDays(15))
                         ->sum('quantity');
 
@@ -111,17 +111,17 @@ class ProductController extends Controller
                 ->get()
                 ->map(function ($product) {
                     // Tính tổng số lượng còn trong kho từ các lô hàng còn hạn trên 15 ngày
-                    $available_quantity = (int) Batch::where('product_id', $product->product_id)
+                    $available_quantity = (int) Batch::where('product_id', $product->product_id)->where('status', 'Active')
                         ->where('expiry_date', '>', now()->addDays(15))
                         ->sum('quantity');
 
                     // Tính trung bình rating
-                    $average_rating = (float) Review::where('product_id', $product->product_id)
+                    $average_rating = Review::where('product_id', $product->product_id)
                         ->avg('rating');
 
                     // Thêm các thuộc tính vào sản phẩm
                     $product->available_quantity = $available_quantity;
-                    $product->average_rating = $average_rating ? round($average_rating, 2) : null;
+                    $product->average_rating = $average_rating ? round($average_rating, 2) : 0;
 
                     if (auth()->check()) {
                         $user_id = auth()->user()->id;
@@ -188,7 +188,7 @@ class ProductController extends Controller
                 ->get()
                 ->map(function ($product) {
                     // Tính tổng số lượng còn trong kho từ các lô hàng còn hạn trên 15 ngày
-                    $available_quantity = (int) Batch::where('product_id', $product->product_id)
+                    $available_quantity = (int) Batch::where('product_id', $product->product_id)->where('status', 'Active')
                         ->where('expiry_date', '>', now()->addDays(15))
                         ->sum('quantity');
 
@@ -250,32 +250,6 @@ class ProductController extends Controller
         }
     }
 
-
-    // public function getProductByName(Request $request)
-    // {
-    //     try {
-    //         $productName = $request->product_name;
-    //         if (empty($productName)) {
-    //             return response()->json([
-    //                 'status' => 'success',
-    //                 'message' => 'Lấy danh sách sản phẩm thành công',
-    //                 'data' => ""
-    //             ], 200);
-    //         }
-    //         $products = Product::where('product_name', 'like', "%$productName%")->get();
-
-    //         return response()->json([
-    //             'status' => 'success',
-    //             'message' => 'Lấy danh sách sản phẩm thành công',
-    //             'data' => $products
-    //         ], 200);
-    //     } catch (\Exception $e) {
-    //         return response()->json([
-    //             'status' => 'error',
-    //             'message' => $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
 
     public function decreaseProductQuantity(Request $request)
     {
@@ -383,7 +357,7 @@ class ProductController extends Controller
                 ->get()
                 ->map(function ($product) {
                     // Tính tổng số lượng còn trong kho từ các lô hàng còn hạn trên 15 ngày
-                    $available_quantity = (int) Batch::where('product_id', $product->product_id)
+                    $available_quantity = (int) Batch::where('product_id', $product->product_id)->where('status', 'Active')
                         ->where('expiry_date', '>', now()->addDays(15))
                         ->sum('quantity');
 
@@ -750,7 +724,7 @@ class ProductController extends Controller
                 ->get()
                 ->map(function ($product) {
                     // Tính tổng số lượng còn trong kho từ các lô hàng còn hạn trên 15 ngày
-                    $available_quantity = (int) Batch::where('product_id', $product->product_id)
+                    $available_quantity = (int) Batch::where('product_id', $product->product_id)->where('status', 'Active')
                         ->where('expiry_date', '>', now()->addDays(15))
                         ->sum('quantity');
 
@@ -804,41 +778,6 @@ class ProductController extends Controller
                 'length' => count($result)
             ], 200);
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    public function searchAIMini(Request $request)
-    {
-        try {
-            $query = $request->input('query');
-
-            if (empty($query)) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Trường query không được để trống'
-                ], 400);
-            }
-
-            $client = new \GuzzleHttp\Client();
-            $response = $client->post('http://python-search:8000/api/search/', [
-                'json' => [
-                    'query' => $query
-                ]
-            ]);
-
-            $body = json_decode($response->getBody(), true);
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Lấy dữ liệu từ API thành công',
-                'data' => $body
-            ], 200);
-        } catch (\Exception $e) {
-            // Xử lý lỗi và trả về thông báo lỗi
             return response()->json([
                 'status' => 'error',
                 'message' => $e->getMessage()

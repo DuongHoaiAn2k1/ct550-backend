@@ -132,6 +132,11 @@ class UserController extends Controller
     {
         try {
             $data = User::find($id);
+            $roles = $data->getRoleNames();
+            $mainRole = $roles->filter(function ($role) {
+                return $role !== 'affiliate_marketer';
+            })->first();
+            $data->role = $mainRole;
 
             return response()->json([
                 'status' => 'success',
@@ -153,10 +158,12 @@ class UserController extends Controller
             $listUser->each(function ($user) {
                 $user->role = $user->getRoleNames()->first();
             });
+            $countCustomer = User::role('loyal_customer')->count();
             return response()->json([
                 'status' => 'success',
                 'message' => 'Fetch list user successfully',
-                'data' => $listUser
+                'data' => $listUser,
+                'count_customer' => $countCustomer
             ], 200);
         } catch (\Exception $e) {
             return response()->json([

@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\Message\MessageController;
 
 
-Route::middleware(['auth', 'role:normal_user|loyal_user|admin|staff'])->prefix('messages')->group(function () {
+Route::middleware(['auth', 'role:normal_user|loyal_customer|admin|staff'])->prefix('messages')->group(function () {
     Route::get('/{id}', [MessageController::class, 'getUserMessages']);
     Route::get('/user/message', [MessageController::class, 'getMessage']);
     Route::get('/count/unread', [MessageController::class, 'countUnUserUnreadMessage']);
