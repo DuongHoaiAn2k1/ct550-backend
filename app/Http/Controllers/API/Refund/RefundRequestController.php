@@ -26,6 +26,25 @@ class RefundRequestController extends Controller
         }
     }
 
+    public function getByUser()
+    {
+        try {
+            $refundRequests = RefundRequest::where('user_id', auth()->user()->id)->orderBy('created_at', 'desc')->get();
+            $dataLength = count($refundRequests);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Lấy yêu cầu hoàn tiền thành công',
+                'data' => $refundRequests,
+                'length' => $dataLength
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function getToday()
     {
         try {

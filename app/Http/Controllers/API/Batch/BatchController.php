@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\API\Batch;
 
 use App\Models\Batch;
+use App\Models\OrderDetail;
 use Illuminate\Http\Request;
+use App\Models\OrderDetailBatch;
 use Illuminate\Support\Facades\DB;
 use App\Jobs\ReduceProductQuantity;
 use App\Http\Controllers\Controller;
@@ -399,5 +401,39 @@ class BatchController extends Controller
                 'message' => $e->getMessage()
             ], 500);
         }
+    }
+    public function getBatchDetailsById($batch_id)
+    {
+        $batch = Batch::where('batch_id', $batch_id)->with('product')->first();
+
+        if (!$batch) {
+            return response()->json(['message' => 'Batch not found'], 404);
+        }
+
+        $orderDetails = OrderDetail::whereHas('orderDetailBatch', function ($query) use ($batch_id) {
+            $query->where('batch_id', $batch_id);
+        })->with('order')->get();
+
+        $orderData = $orderDetails->map(function ($orderDetail) use ($batch_id) {
+            $quantity = OrderDetailBatch::where('order_detail_id', $orderDetail->order_detail_id)
+                ->where('batch_id', $batch_id)
+                ->sum('quantity');
+
+            return [
+                'order_id' => $orderDetail->order->order_id,
+                'order_detail_id' => $orderDetail->order_detail_id,
+                'product_count' => $quantity,
+                'bill_id' => $orderDetail->order->bill_id,
+            ];
+        });
+
+        // Chuẩn bị kết quả để trả về
+        $result = [
+            'batch' => $batch,
+            'orders' => $orderData,
+        ];
+
+        // Trả về kết quả dưới dạng JSON
+        return response()->json($result);
     }
 }

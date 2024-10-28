@@ -17,4 +17,5 @@ Route::middleware(['auth', 'role:admin|staff|normal_user|loyal_customer'])->pref
     Route::post('/check/product', [BatchController::class, 'checkStockAvailability']);
     Route::post('/check/product/stock/{product_id}', [BatchController::class, 'checkProductInStock']);
     Route::patch('/status/{batch_id}', [BatchController::class, 'updateStatus']);
+    Route::get('/{batch_id}/detail', [BatchController::class, 'getBatchDetailsById']);
 });
