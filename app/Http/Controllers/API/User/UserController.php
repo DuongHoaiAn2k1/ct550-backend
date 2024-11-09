@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use App\Events\User\UserRegistered;
 use App\Http\Controllers\Controller;
+use App\Mail\PointGiving;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
@@ -192,34 +193,34 @@ class UserController extends Controller
             ], 500);
         }
     }
-    public function getAll()
-    {
-        try {
-            $role = auth()->user()->roles;
-            if ($role != 0) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Quyền này không thuộc về bạn'
-                ], 500);
-            }
-            $users = User::where('roles', '<>', 0)->get();
-            $list_order = null;
-            // $list_order = Order::get();
-            $dataLength = count($users);
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Lấy danh sách người dùng thành công',
-                'data' => $users,
-                'length' => $dataLength,
-                'list_order' => $list_order
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
-        }
-    }
+    // public function getAll()
+    // {
+    //     try {
+    //         $role = auth()->user()->roles;
+    //         if ($role != 0) {
+    //             return response()->json([
+    //                 'status' => 'error',
+    //                 'message' => 'Quyền này không thuộc về bạn'
+    //             ], 500);
+    //         }
+    //         $users = User::where('roles', '<>', 0)->get();
+    //         $list_order = null;
+    //         // $list_order = Order::get();
+    //         $dataLength = count($users);
+    //         return response()->json([
+    //             'status' => 'success',
+    //             'message' => 'Lấy danh sách người dùng thành công',
+    //             'data' => $users,
+    //             'length' => $dataLength,
+    //             'list_order' => $list_order
+    //         ], 200);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
 
     public function createAddress(Request $request)
     {
@@ -257,12 +258,6 @@ class UserController extends Controller
             $userAddresses[] = $data;
             $user->address = $userAddresses;
             $user->save();
-            // DB::table('users')
-            //     ->where('id', $userId)
-            //     ->update(['address' => json_encode($userAddresses)]);
-            // $user->update([
-            //     'address' => json_encode($userAddresses)
-            // ]);
             return response()->json([
                 'status' => 'success',
                 'message' => 'Thêm địa chỉ thành công',
@@ -402,9 +397,6 @@ class UserController extends Controller
 
             array_splice($userAddresses, $index, 1);
 
-            // $user->update([
-            //     'address' => json_encode($userAddresses)
-            // ]);
             $user->address = $userAddresses;
             $user->save();
             return response()->json([
@@ -568,6 +560,48 @@ class UserController extends Controller
         }
     }
 
+    public function getTopCustomersByMonth(Request $request)
+    {
+        $month = $request->month ?? null;
+        if (!$month) {
+            $month = Carbon::now()->subMonth()->format('m');
+        }
+
+        try {
+            $topCustomers = User::with(['roles' => function ($query) {
+                $query->whereIn('name', ['normal_user', 'loyal_customer']);
+            }])
+                ->with(['order' => function ($query) use ($month) {
+                    $query->where('status', 'delivered')->whereMonth('created_at', $month);
+                }])
+                ->get()
+                ->map(function ($user) {
+                    $user->role = $user->roles->first()->name ?? null;
+                    unset($user->roles);
+
+                    $user->total_spent = $user->order->sum('total_cost');
+
+                    return $user;
+                })
+                ->filter(function ($user) {
+                    return $user->total_spent > 0;
+                })
+                ->sortByDesc('total_spent')
+                ->values();
+
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $topCustomers,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function getListAffiliate()
     {
         try {
@@ -594,6 +628,41 @@ class UserController extends Controller
         } while (!$this->isValidPassword($password));
 
         return $password;
+    }
+
+    public function pointGiving(Request $request)
+    {
+        try {
+            $user_id = $request->user_id;
+            $user = User::where('id', $user_id)->first();
+
+            if ($user->point_expiration_date != null) {
+                $user->point = $user->point + $request->point;
+                $user->save();
+            }
+
+            if ($user->point == 0 && $user->point_expiration_date === null) {
+                $user->point_expiration_date = now()->addDays(30);
+                $user->point = $user->point + $request->point;
+                $user->save();
+            }
+
+
+            $point  = $request->point;
+            $rank = $request->rank;
+            $user_name = $user->name;
+            $month = $request->month;
+            Mail::to($user->email)->send(new PointGiving($rank, $point, $user_name, $month));
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Point Increased Successfully'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     private function isValidPassword($password)

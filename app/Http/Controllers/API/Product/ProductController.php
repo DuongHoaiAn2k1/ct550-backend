@@ -21,9 +21,8 @@ class ProductController extends Controller
             $products = Product::with('product_promotion', 'product_promotion.promotion')
                 ->get()
                 ->map(function ($product) {
-                    // Tính tổng số lượng còn trong kho từ các lô hàng còn hạn trên 15 ngày
+                    // Tính tổng số lượng còn trong kho từ các lô hàng còn hạn trên 20 ngày
                     $available_quantity = (int) Batch::where('product_id', $product->product_id)->where('status', 'Active')
-                        ->where('expiry_date', '>', now()->addDays(15))
                         ->sum('quantity');
 
                     // Tính trung bình rating
@@ -80,40 +79,47 @@ class ProductController extends Controller
             ], 500);
         }
     }
-    // public function indexGroupedByCategory()
-    // {
-    //     try {
-    //         $groupedProducts = Product::all()->groupBy('category_id');
-
-    //         $groupedProductsArray = [];
-    //         foreach ($groupedProducts as $categoryId => $products) {
-    //             $groupedProductsArray[$categoryId] = $products->toArray();
-    //         }
-
-    //         return response()->json([
-    //             'status' => 'success',
-    //             'message' => 'Lấy danh sách sản phẩm được nhóm theo category_id thành công',
-    //             'groupedProducts' => $groupedProductsArray
-    //         ], 200);
-    //     } catch (\Exception $e) {
-    //         return response()->json([
-    //             'status' => 'error',
-    //             'message' => $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
 
     public function get($id)
     {
         try {
             $products = Product::where('product_id', $id)
-                ->with('product_promotion', 'product_promotion.promotion')
+                ->with([
+                    'product_promotion' => function ($query) {
+                        $query->whereHas('promotion', function ($q) {
+                            $q->where('status', 'active');
+                        });
+                    },
+                    'product_promotion.promotion',
+                    'batches' => function ($query) {
+                        $query->whereHas('batchPromotion', function ($q) {
+                            $q->whereHas('promotion', function ($q) {
+                                $q->where('status', 'active');
+                            });
+                        });
+                    },
+                    'batches.batchPromotion.promotion'
+                ])
                 ->get()
                 ->map(function ($product) {
-                    // Tính tổng số lượng còn trong kho từ các lô hàng còn hạn trên 15 ngày
+                    // Tính tổng số lượng còn trong kho từ các lô hàng còn hạn trên 20 ngày
                     $available_quantity = (int) Batch::where('product_id', $product->product_id)->where('status', 'Active')
-                        ->where('expiry_date', '>', now()->addDays(15))
                         ->sum('quantity');
+
+                    $expiring_soon_quantity = (int) Batch::where('product_id', $product->product_id)
+                        ->where('status', 'Expiring Soon')
+                        ->whereHas('batchPromotion')->whereHas('batchPromotion.promotion', function ($query) {
+                            $query->where('status', 'active');
+                        })
+                        ->sum('quantity');
+
+                    // Tổng số lượng khả dụng sẽ bao gồm cả 'Active' và 'Expiring Soon' có batch_promotion
+                    $available_quantity += $expiring_soon_quantity;
+
+                    // Tính tổng số lượng từ các batch có batch_promotion
+                    $product_quantity_batch_promotion = $product->batches->reduce(function ($carry, $batch) {
+                        return $carry + $batch->quantity;
+                    }, 0);
 
                     // Tính trung bình rating
                     $average_rating = Review::where('product_id', $product->product_id)
@@ -121,8 +127,12 @@ class ProductController extends Controller
 
                     // Thêm các thuộc tính vào sản phẩm
                     $product->available_quantity = $available_quantity;
+                    $product->product_quantity_batch_promotion = $product_quantity_batch_promotion;
                     $product->average_rating = $average_rating ? round($average_rating, 2) : 0;
 
+                    if ($product->batches->isEmpty()) {
+                        unset($product->batches);
+                    }
                     if (auth()->check()) {
                         $user_id = auth()->user()->id;
                         $roles = auth()->user()->getRoleNames();
@@ -182,15 +192,47 @@ class ProductController extends Controller
                 ], 404);
             }
 
-            // Lấy danh sách sản phẩm theo category_id
+            // Lấy danh sách sản phẩm theo category_id với các quan hệ cần thiết
             $products = Product::where('category_id', $category->category_id)
-                ->with('product_promotion', 'product_promotion.promotion')
+                ->with([
+                    'product_promotion' => function ($query) {
+                        $query->whereHas('promotion', function ($q) {
+                            $q->where('status', 'active');
+                        });
+                    },
+                    'product_promotion.promotion',
+                    'batches' => function ($query) {
+                        $query->whereHas('batchPromotion', function ($q) {
+                            $q->whereHas('promotion', function ($q) {
+                                $q->where('status', 'active');
+                            });
+                        });
+                    },
+                    'batches.batchPromotion.promotion'
+                ])
                 ->get()
                 ->map(function ($product) {
-                    // Tính tổng số lượng còn trong kho từ các lô hàng còn hạn trên 15 ngày
-                    $available_quantity = (int) Batch::where('product_id', $product->product_id)->where('status', 'Active')
-                        ->where('expiry_date', '>', now()->addDays(15))
+                    // Tính tổng số lượng còn trong kho từ các lô hàng còn hạn trên 20 ngày
+                    $available_quantity = (int) Batch::where('product_id', $product->product_id)
+                        ->where('status', 'Active')
                         ->sum('quantity');
+
+                    // Tính thêm số lượng từ các batch có trạng thái 'Expiring Soon' và có batchPromotion
+                    $expiring_soon_quantity = (int) Batch::where('product_id', $product->product_id)
+                        ->where('status', 'Expiring Soon')
+                        ->whereHas('batchPromotion')->whereHas('batchPromotion.promotion', function ($query) {
+                            $query->where('status', 'active');
+                        })
+                        ->sum('quantity');
+
+                    // Tổng số lượng khả dụng sẽ bao gồm cả 'Active' và 'Expiring Soon' có batch_promotion
+                    $available_quantity += $expiring_soon_quantity;
+
+
+                    // Tính tổng số lượng từ các batch có batch_promotion
+                    $product_quantity_batch_promotion = $product->batches->reduce(function ($carry, $batch) {
+                        return $carry + $batch->quantity;
+                    }, 0);
 
                     // Tính trung bình rating
                     $average_rating = (float) Review::where('product_id', $product->product_id)
@@ -198,7 +240,13 @@ class ProductController extends Controller
 
                     // Thêm các thuộc tính vào sản phẩm
                     $product->available_quantity = $available_quantity;
-                    $product->average_rating = $average_rating ? round($average_rating, 2) : null; // Làm tròn đến 2 chữ số thập phân
+                    $product->product_quantity_batch_promotion = $product_quantity_batch_promotion;
+                    $product->average_rating = $average_rating ? round($average_rating, 2) : null;
+
+                    // Các 'batches' đã được lọc từ truy vấn, nhưng bạn có thể thêm kiểm tra bổ sung nếu cần
+                    if ($product->batches->isEmpty()) {
+                        unset($product->batches);
+                    }
 
                     // Kiểm tra nếu người dùng đã đăng nhập
                     if (auth()->check()) {
@@ -208,12 +256,13 @@ class ProductController extends Controller
                         $mainRole = $roles->filter(function ($role) {
                             return $role !== 'affiliate_marketer';
                         })->first();
+
                         // Kiểm tra xem sản phẩm này có nằm trong danh sách yêu thích của người dùng hay không
                         $is_favorite = Favorite::where('user_id', $user_id)
                             ->where('product_id', $product->product_id)
                             ->exists();
 
-                        // Thêm trường 'like' cho sản phẩm
+                        // Thêm trường 'liked' cho sản phẩm
                         $product->liked = $is_favorite;
 
                         $product->product_promotion = $product->product_promotion->filter(function ($promotion) use ($mainRole) {
@@ -229,7 +278,7 @@ class ProductController extends Controller
                             unset($product->product_promotion);
                         }
                     } else {
-                        // Nếu người dùng không đăng nhập, trường 'like' sẽ là false
+                        // Nếu người dùng không đăng nhập, trường 'liked' sẽ là false
                         $product->liked = false;
                         unset($product->product_promotion);
                     }
@@ -249,7 +298,6 @@ class ProductController extends Controller
             ], 500);
         }
     }
-
 
     public function decreaseProductQuantity(Request $request)
     {
@@ -353,13 +401,40 @@ class ProductController extends Controller
     {
         try {
             $products = Product::where('category_id', $category_id)
-                ->with('product_promotion', 'product_promotion.promotion')
+                ->with([
+                    'product_promotion' => function ($query) {
+                        $query->whereHas('promotion', function ($q) {
+                            $q->where('status', 'active');
+                        });
+                    },
+                    'product_promotion.promotion',
+                    'batches' => function ($query) {
+                        $query->whereHas('batchPromotion', function ($q) {
+                            $q->whereHas('promotion', function ($q) {
+                                $q->where('status', 'active');
+                            });
+                        });
+                    },
+                    'batches.batchPromotion.promotion',
+                ])
                 ->get()
                 ->map(function ($product) {
-                    // Tính tổng số lượng còn trong kho từ các lô hàng còn hạn trên 15 ngày
+                    // Tính tổng số lượng còn trong kho từ các lô hàng còn hạn trên 20 ngày
                     $available_quantity = (int) Batch::where('product_id', $product->product_id)->where('status', 'Active')
-                        ->where('expiry_date', '>', now()->addDays(15))
                         ->sum('quantity');
+
+                    $expiring_soon_quantity = (int) Batch::where('product_id', $product->product_id)
+                        ->where('status', 'Expiring Soon')
+                        ->whereHas('batchPromotion')->whereHas('batchPromotion.promotion', function ($query) {
+                            $query->where('status', 'active');
+                        })
+                        ->sum('quantity');
+
+                    $available_quantity += $expiring_soon_quantity;
+
+                    $product_quantity_batch_promotion = $product->batches->reduce(function ($carry, $batch) {
+                        return $carry + $batch->quantity;
+                    }, 0);
 
                     // Tính trung bình rating
                     $average_rating = (float) Review::where('product_id', $product->product_id)
@@ -367,20 +442,45 @@ class ProductController extends Controller
 
                     // Thêm các thuộc tính vào sản phẩm
                     $product->available_quantity = $available_quantity;
+                    $product->product_quantity_batch_promotion = $product_quantity_batch_promotion;
                     $product->average_rating = $average_rating ? round($average_rating, 2) : null; // Làm tròn đến 2 chữ số thập phân
+
+                    if ($product->batches->isEmpty()) {
+                        unset($product->batches);
+                    }
 
                     if (auth()->check()) {
                         $user_id = auth()->user()->id;
+                        $roles = auth()->user()->getRoleNames();
+
+                        $mainRole = $roles->filter(function ($role) {
+                            return $role !== 'affiliate_marketer';
+                        })->first();
+
                         // Kiểm tra xem sản phẩm này có nằm trong danh sách yêu thích của người dùng hay không
                         $is_favorite = Favorite::where('user_id', $user_id)
                             ->where('product_id', $product->product_id)
                             ->exists();
 
-                        // Thêm trường 'like' cho sản phẩm
+                        // Thêm trường 'liked' cho sản phẩm
                         $product->liked = $is_favorite;
+
+                        $product->product_promotion = $product->product_promotion->filter(function ($promotion) use ($mainRole) {
+                            $user_groups = json_decode($promotion->promotion->user_group, true);
+
+                            if (is_array($user_groups) && in_array($mainRole, $user_groups)) {
+                                return true;
+                            }
+                            return false;
+                        });
+
+                        if ($product->product_promotion->isEmpty()) {
+                            unset($product->product_promotion);
+                        }
                     } else {
-                        // Nếu người dùng không đăng nhập, trường 'like' sẽ là false
+                        // Nếu người dùng không đăng nhập, trường 'liked' sẽ là false
                         $product->liked = false;
+                        unset($product->product_promotion);
                     }
                     return $product;
                 });
@@ -723,9 +823,8 @@ class ProductController extends Controller
             $products = Product::whereIn('product_id', $productIds)->with('product_promotion', 'product_promotion.promotion')
                 ->get()
                 ->map(function ($product) {
-                    // Tính tổng số lượng còn trong kho từ các lô hàng còn hạn trên 15 ngày
+                    // Tính tổng số lượng còn trong kho từ các lô hàng còn hạn trên 20 ngày
                     $available_quantity = (int) Batch::where('product_id', $product->product_id)->where('status', 'Active')
-                        ->where('expiry_date', '>', now()->addDays(15))
                         ->sum('quantity');
 
                     // Tính trung bình rating

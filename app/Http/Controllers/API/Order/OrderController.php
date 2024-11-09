@@ -148,7 +148,8 @@ class OrderController extends Controller
                 ], 422);
             }
 
-            // Tạo đơn hàng
+            // \Log::info('Order detail:', $request->order_details);
+
             $order = new Order();
             $order->bill_id = $request->bill_id;
             $order->status = $request->status;
@@ -169,23 +170,105 @@ class OrderController extends Controller
             $order->pay_method = $request->pay_method;
             $order->save();
 
+            ////////////////////////////////////////////////////////////////////////////////////////   
+            // Xử lý trừ stock trực tiếp
+            ////////////////////////////////////////////////////////////////////////////////////
+            // foreach ($request->order_details as $orderDetailData) {
+            //     $product_id = $orderDetailData['product_id'];
+            //     $quantity_to_reduce = $orderDetailData['quantity'];
+
+            //     // Lấy các batch còn stock của sản phẩm
+            //     $batches = Batch::where('product_id', $product_id)
+            //         ->where('status', 'Active')
+            //         ->orderBy('entry_date', 'asc')
+            //         ->lockForUpdate()
+            //         ->get();
+
+            //     $batchDetails = [];
+
+            //     foreach ($batches as $batch) {
+            //         if ($quantity_to_reduce <= 0) {
+            //             break;
+            //         }
+
+            //         if ($batch->quantity >= $quantity_to_reduce) {
+            //             $batch->quantity -= $quantity_to_reduce;
+            //             $batch->sold_quantity += $quantity_to_reduce;
+            //             $batch->save();
+
+            //             $batchDetails[] = [
+            //                 'batch_id' => $batch->batch_id,
+            //                 'quantity' => $quantity_to_reduce
+            //             ];
+            //             $quantity_to_reduce = 0;
+            //         } else {
+            //             $quantity_to_reduce -= $batch->quantity;
+
+            //             $batchDetails[] = [
+            //                 'batch_id' => $batch->batch_id,
+            //                 'quantity' => $batch->quantity
+            //             ];
+            //             $batch->sold_quantity += $batch->quantity;
+            //             $batch->quantity = 0;
+            //             $batch->save();
+            //         }
+            //     }
+
+            //     // Kiểm tra nếu không đủ stock
+            //     if ($quantity_to_reduce > 0) {
+            //         DB::rollBack();
+            //         return response()->json([
+            //             'status' => 'error',
+            //             'message' => 'Not enough stock to fulfill the order.'
+            //         ], 400);
+            //     }
+
+            //     // Tạo chi tiết đơn hàng
+            //     $orderDetail = new OrderDetail();
+            //     $orderDetail->order_id = $order->order_id;
+            //     $orderDetail->product_id = $orderDetailData['product_id'];
+            //     $orderDetail->quantity = $orderDetailData['quantity'];
+            //     $orderDetail->total_cost_detail = $orderDetailData['total_cost_detail'];
+            //     $orderDetail->save();
+
+            //     // Lưu các chi tiết batch
+            //     foreach ($batchDetails as $batchDetail) {
+            //         DB::table('order_detail_batches')->insert([
+            //             'order_detail_id' => $orderDetail->order_detail_id,
+            //             'batch_id' => $batchDetail['batch_id'],
+            //             'quantity' => $batchDetail['quantity'],
+            //         ]);
+            //     }
+            // }
+            ////////////////////////////////////////////////////////////////////////////////////////////
             // Xử lý trừ stock trực tiếp
             foreach ($request->order_details as $orderDetailData) {
                 $product_id = $orderDetailData['product_id'];
                 $quantity_to_reduce = $orderDetailData['quantity'];
-
-                $date_threshold = now()->addDays(15);
-
-                // Lấy các batch còn stock của sản phẩm
-                $batches = Batch::where('product_id', $product_id)
-                    ->where('status', 'Active')
-                    ->where('expiry_date', '>', $date_threshold)
-                    ->orderBy('entry_date', 'asc')
-                    ->lockForUpdate()
-                    ->get();
+                $isPromotionApplied = $orderDetailData['is_promotion_batch_applied'];
 
                 $batchDetails = [];
 
+                if ($isPromotionApplied) {
+                    // Lấy các batch có khuyến mãi còn stock
+                    $batches = Batch::where('product_id', $product_id)
+                        ->where('status', 'Expiring Soon')
+                        ->whereHas('batchPromotion.promotion', function ($query) {
+                            $query->where('status', 'active');
+                        })
+                        ->orderBy('expiry_date', 'asc')
+                        ->lockForUpdate()
+                        ->get();
+                } else {
+                    // Lấy các batch còn stock không yêu cầu khuyến mãi
+                    $batches = Batch::where('product_id', $product_id)
+                        ->where('status', 'Active')
+                        ->orderBy('expiry_date', 'asc')
+                        ->lockForUpdate()
+                        ->get();
+                }
+
+                // Bắt đầu trừ số lượng trong các batch
                 foreach ($batches as $batch) {
                     if ($quantity_to_reduce <= 0) {
                         break;
@@ -214,12 +297,22 @@ class OrderController extends Controller
                     }
                 }
 
-                // Kiểm tra nếu không đủ stock
+                // Nếu không đủ stock
                 if ($quantity_to_reduce > 0) {
+                    // Khôi phục lại số lượng trong các batch đã trừ trước đó
+                    foreach ($batchDetails as $batchDetail) {
+                        $batchToRestore = Batch::find($batchDetail['batch_id']);
+                        if ($batchToRestore) {
+                            $batchToRestore->quantity += $batchDetail['quantity'];
+                            $batchToRestore->sold_quantity -= $batchDetail['quantity'];
+                            $batchToRestore->save();
+                        }
+                    }
+
                     DB::rollBack();
                     return response()->json([
                         'status' => 'error',
-                        'message' => 'Not enough stock to fulfill the order.'
+                        'message' => 'Không đủ số lượng sản phẩm trong lô hàng để áp dụng khuyến mãi.'
                     ], 400);
                 }
 
@@ -441,6 +534,9 @@ class OrderController extends Controller
             $order->status = $request->status;
             if ($order->total_cost >= 1000000 && $request->status == 'delivered') {
                 $user = User::where('id', $order->user_id)->first();
+                if ($user->point == 0 && $user->point_expiration_date === null) {
+                    $user->point_expiration_date = now()->addDays(30);
+                }
                 $user->point = $user->point + 10;
                 $user->save();
             }
@@ -504,13 +600,18 @@ class OrderController extends Controller
             $order->paid = 1;
             $order->save();
             if ($request->status == 'preparing' && $lastStatus != 'preparing') {
-                $notificationController = new NotificationController();
-                $notificationRequest = new Request([
-                    'message' => 'Đơn hàng đã đặt thành công',
-                    'route_name' => 'order',
-                    'type' => 'admin'
-                ]);
-                $notificationController->create($notificationRequest);
+                $notification = new Notification();
+                $notification->message = 'Đơn hàng đã đặt thành công';
+                $notification->user_id = $order->user_id;
+                $notification->type = 'admin';
+                $notification->route_name = 'order';
+                $notification->save();
+                // $notificationRequest = new Request([
+                //     'message' => 'Đơn hàng đã đặt thành công',
+                //     'route_name' => 'order',
+                //     'type' => 'admin'
+                // ]);
+                // $notificationController->create($notificationRequest);
                 $this->sendOrderConfirmationEmail($order->order_id);
             }
             // event(new OrderCreated());

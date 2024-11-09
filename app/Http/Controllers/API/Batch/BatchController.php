@@ -53,6 +53,7 @@ class BatchController extends Controller
         }
     }
 
+
     public function getHiddenList()
     {
         try {
@@ -254,10 +255,7 @@ class BatchController extends Controller
             $product_id = $request->product_id;
             $quantity_to_reduce = $request->quantity;
 
-            $date_threshold = now()->addDays(15);
-
             $batches = Batch::where('product_id', $product_id)->where('status', 'Active')
-                ->where('expiry_date', '>', $date_threshold)
                 ->orderBy('entry_date', 'asc')
                 ->lockForUpdate()
                 ->get();
@@ -328,7 +326,6 @@ class BatchController extends Controller
             $required_quantity = $product['quantity'];
 
             $total_available_quantity = Batch::where('product_id', $product_id)->where('status', 'Active')
-                ->where('expiry_date', '>', now()->addDays(15)) // Chỉ tính các lô hàng có hạn sử dụng trên 15 ngày
                 ->sum('quantity');
 
             if ($total_available_quantity < $required_quantity) {
@@ -361,8 +358,7 @@ class BatchController extends Controller
     public function checkProductInStock($product_id)
     {
         try {
-            $total_available_quantity = Batch::where('product_id', $product_id)
-                ->where('expiry_date', '>', now()->addDays(15)) // Chỉ lấy các lô hàng có hạn sử dụng trên 15 ngày
+            $total_available_quantity = Batch::where('product_id', $product_id)->where('status', 'Active')
                 ->sum('quantity');
 
             if ($total_available_quantity > 0) {
@@ -412,6 +408,8 @@ class BatchController extends Controller
 
         $orderDetails = OrderDetail::whereHas('orderDetailBatch', function ($query) use ($batch_id) {
             $query->where('batch_id', $batch_id);
+        })->whereHas('order', function ($query) {
+            $query->where('status', '!=', 'cancelled');
         })->with('order')->get();
 
         $orderData = $orderDetails->map(function ($orderDetail) use ($batch_id) {
@@ -433,7 +431,7 @@ class BatchController extends Controller
             'orders' => $orderData,
         ];
 
-        // Trả về kết quả dưới dạng JSON
+        // Trả về kết quả dnder dạng JSON
         return response()->json($result);
     }
 }

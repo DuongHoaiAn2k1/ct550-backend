@@ -18,17 +18,18 @@ class StatisticController extends Controller
                 $start_date = $request->start_date;
                 $end_date = $request->end_date;
                 $users = User::role(['normal_user', 'loyal_customer', 'affiliate_marketer'])
-                    ->whereBetween('created_at', [$start_date, $end_date])->withCount(['order' => function ($query) {
+                    ->whereBetween('created_at', [$start_date, $end_date])
+                    ->withCount(['order' => function ($query) {
                         $query->where('status', 'delivered');
                     }])
                     ->withSum(['order' => function ($query) {
                         $query->where('status', 'delivered');
                     }], 'total_cost')
-                    ->get();
-                return response()->json([
-                    'status' => 'success',
-                    'data' => $users
-                ], 200);
+                    ->get()
+                    ->map(function ($user) {
+                        $user->role = $user->hasRole('loyal_customer') ? 'loyal_customer' : 'normal_user';
+                        return $user;
+                    });
             } else {
                 $users = User::role(['normal_user', 'loyal_customer', 'affiliate_marketer'])
                     ->withCount(['order' => function ($query) {
@@ -37,12 +38,17 @@ class StatisticController extends Controller
                     ->withSum(['order' => function ($query) {
                         $query->where('status', 'delivered');
                     }], 'total_cost')
-                    ->get();
-                return response()->json([
-                    'status' => 'success',
-                    'data' => $users
-                ], 200);
+                    ->get()
+                    ->map(function ($user) {
+                        $user->role = $user->hasRole('loyal_customer') ? 'loyal_customer' : 'normal_user';
+                        return $user;
+                    });
             }
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $users
+            ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
@@ -50,6 +56,7 @@ class StatisticController extends Controller
             ], 500);
         }
     }
+
 
     public function statisticProduct(Request $request)
     {

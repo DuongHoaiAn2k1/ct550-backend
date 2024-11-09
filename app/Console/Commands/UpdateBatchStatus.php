@@ -22,7 +22,7 @@ class UpdateBatchStatus extends Command
 
     private function updateExpiringSoon()
     {
-        $expiringSoonDate = Carbon::now()->addDays(15);
+        $expiringSoonDate = Carbon::now()->addDays(20);
 
         Batch::where('status', 'Active')
             ->where('expiry_date', '<=', $expiringSoonDate)

@@ -27,4 +27,8 @@ class Batch extends Model
     {
         return $this->hasMany(OrderDetailBatch::class, 'batch_id');
     }
+    public function batchPromotion()
+    {
+        return $this->hasMany(BatchPromotion::class, 'batch_id');
+    }
 }

@@ -137,7 +137,6 @@ class MessageController extends Controller
     public function store(Request $request)
     {
         try {
-
             if ($request->message == null) {
                 return response()->json([
                     'status' => 'error',
@@ -149,13 +148,9 @@ class MessageController extends Controller
 
             // Xác định người nhận
             if ($this->isUser($senderId)) {
-                // Nếu người gửi là người dùng (normal_user, loyal_user, affiliate_marketer)
                 $receiverId = $this->getAdminId();
             } else {
-                // Nếu người gửi là admin hoặc staff, cần truyền receiver_id từ request
                 $receiverId = $request->receiver_id;
-
-                // Xác thực xem người nhận có hợp lệ không
                 if (!$receiverId || !User::find($receiverId)) {
                     return response()->json([
                         'status' => 'error',
@@ -164,14 +159,21 @@ class MessageController extends Controller
                 }
             }
 
+            // Kiểm tra và chuẩn bị dữ liệu sản phẩm
+            $products = null;
+            if ($request->has('products') && is_array($request->products)) {
+                $products = json_encode($request->products, JSON_UNESCAPED_UNICODE); // Chuyển mảng thành JSON
+            }
+
             // Tạo tin nhắn mới
             $message = Message::create([
                 'sender_id' => $senderId,
                 'receiver_id' => $receiverId,
                 'message' => $request->message,
+                'products' => $products,
             ]);
 
-
+            // Gửi sự kiện
             event(new MessageSent($message));
 
             return response()->json([
@@ -185,6 +187,7 @@ class MessageController extends Controller
             ], 500);
         }
     }
+
 
 
     private function isUser($userId)

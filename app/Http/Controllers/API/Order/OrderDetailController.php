@@ -138,7 +138,7 @@ class OrderDetailController extends Controller
                 return response()->json([
                     'status' => 'error',
                     'message' => false
-                ], 404);
+                ], 200);
             }
         } catch (\Exception $e) {
             return response()->json([
