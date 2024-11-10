@@ -3,10 +3,10 @@ name: Laravel CI/CD with Docker
 on:
   push:
     branches:
-      - main
+      - production
   pull_request:
     branches:
-      - main
+      - production
 
 jobs:
   build:
@@ -95,8 +95,8 @@ jobs:
             set -e
             
             # Kiểm tra và tạo thư mục dự án nếu chưa tồn tại
-            mkdir -p /var/www/ct550
-            cd /var/www/ct550
+            mkdir -p /var/www/html/ct550
+            cd /var/www/html/ct550
       
             # Khởi tạo Git repository nếu chưa tồn tại
             if [ ! -d .git ]; then
@@ -123,7 +123,6 @@ jobs:
              
             echo "Deployment completed successfully!"
           EOF
-
 
 
 

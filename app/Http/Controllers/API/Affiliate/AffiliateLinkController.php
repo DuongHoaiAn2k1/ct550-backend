@@ -60,7 +60,7 @@ class AffiliateLinkController extends Controller
 
     private function generateAffiliateLink($userId, $productId)
     {
-        $baseUrl = 'https://client.dacsancamau.com:3001/product/detail/' . $productId;
+        $baseUrl = env('CLIENT_URL') . '/product/detail/' . $productId;
 
         return $baseUrl . '?ref=' . $userId;
     }

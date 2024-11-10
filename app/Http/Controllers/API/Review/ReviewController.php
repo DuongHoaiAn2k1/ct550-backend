@@ -62,7 +62,6 @@ class ReviewController extends Controller
         }
     }
 
-
     public function reply(Request $request, $id)
     {
         try {

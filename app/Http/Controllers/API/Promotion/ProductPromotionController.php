@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers\API\Promotion;
 
+use App\Models\Batch;
+use App\Models\Promotion;
 use Illuminate\Http\Request;
+use App\Models\BatchPromotion;
 use App\Models\ProductPromotion;
 use App\Http\Controllers\Controller;
 
@@ -52,6 +55,58 @@ class ProductPromotionController extends Controller
                 'promotion_id' => 'required',
                 'discount_price' => 'required',
             ]);
+
+            $promotion = Promotion::where('promotion_id', $request->promotion_id)->first();
+
+            if (!$promotion) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Không tìm thấy khuyến mãi này',
+                ], 404);
+            }
+            if ($promotion->apply_to != 'product_group') {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Không áp dụng cho khuyến mãi này',
+                ], 404);
+            }
+
+            if ($promotion->status != 'active') {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Khuyến mãi đã qua',
+                ], 404);
+            }
+            $existsProductPromotion = ProductPromotion::where('product_id', $request->product_id)
+                ->whereHas('promotion', function ($query) {
+                    $query->where('status', 'active');
+                })
+                ->exists();
+
+            if ($existsProductPromotion) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Sản phẩm đã được khuyến mãi',
+                    'error' => 'exists',
+                ], 409);
+            }
+
+            $existsBatchPromotion = BatchPromotion::whereHas('batch', function ($query) use ($request) {
+                $query->where('product_id', $request->product_id);
+            })
+                ->whereHas('promotion', function ($query) {
+                    $query->where('status', 'active');
+                })
+                ->exists();
+
+
+            if ($existsBatchPromotion) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Sản phẩm đã được khuyến mãi',
+                    'error' => 'exists',
+                ], 409);
+            }
 
             $productPromotion = ProductPromotion::create($validatedData);
 

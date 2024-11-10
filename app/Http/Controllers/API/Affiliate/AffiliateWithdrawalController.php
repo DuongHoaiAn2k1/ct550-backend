@@ -81,6 +81,7 @@ class AffiliateWithdrawalController extends Controller
 
             $affiliateWallet = AffiliateWallet::where('affiliate_user_id', $affiliaateWithdrawal->affiliate_user_id)->first();
             $affiliateWallet->balance -= $affiliaateWithdrawal->amount;
+            $affiliateWallet->income += $affiliaateWithdrawal->amount;
             $affiliateWallet->save();
             event(new AffiliateWithdrawalSent());
             return response()->json([

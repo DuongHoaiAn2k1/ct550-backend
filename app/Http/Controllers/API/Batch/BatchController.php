@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\API\Batch;
 
 use App\Models\Batch;
+use App\Models\OrderDetail;
 use Illuminate\Http\Request;
+use App\Models\OrderDetailBatch;
 use Illuminate\Support\Facades\DB;
 use App\Jobs\ReduceProductQuantity;
 use App\Http\Controllers\Controller;
@@ -50,6 +52,7 @@ class BatchController extends Controller
             ], 500);
         }
     }
+
 
     public function getHiddenList()
     {
@@ -252,10 +255,7 @@ class BatchController extends Controller
             $product_id = $request->product_id;
             $quantity_to_reduce = $request->quantity;
 
-            $date_threshold = now()->addDays(15);
-
             $batches = Batch::where('product_id', $product_id)->where('status', 'Active')
-                ->where('expiry_date', '>', $date_threshold)
                 ->orderBy('entry_date', 'asc')
                 ->lockForUpdate()
                 ->get();
@@ -326,7 +326,6 @@ class BatchController extends Controller
             $required_quantity = $product['quantity'];
 
             $total_available_quantity = Batch::where('product_id', $product_id)->where('status', 'Active')
-                ->where('expiry_date', '>', now()->addDays(15)) // Chỉ tính các lô hàng có hạn sử dụng trên 15 ngày
                 ->sum('quantity');
 
             if ($total_available_quantity < $required_quantity) {
@@ -359,8 +358,7 @@ class BatchController extends Controller
     public function checkProductInStock($product_id)
     {
         try {
-            $total_available_quantity = Batch::where('product_id', $product_id)
-                ->where('expiry_date', '>', now()->addDays(15)) // Chỉ lấy các lô hàng có hạn sử dụng trên 15 ngày
+            $total_available_quantity = Batch::where('product_id', $product_id)->where('status', 'Active')
                 ->sum('quantity');
 
             if ($total_available_quantity > 0) {
@@ -399,5 +397,41 @@ class BatchController extends Controller
                 'message' => $e->getMessage()
             ], 500);
         }
+    }
+    public function getBatchDetailsById($batch_id)
+    {
+        $batch = Batch::where('batch_id', $batch_id)->with('product')->first();
+
+        if (!$batch) {
+            return response()->json(['message' => 'Batch not found'], 404);
+        }
+
+        $orderDetails = OrderDetail::whereHas('orderDetailBatch', function ($query) use ($batch_id) {
+            $query->where('batch_id', $batch_id);
+        })->whereHas('order', function ($query) {
+            $query->where('status', '!=', 'cancelled');
+        })->with('order')->get();
+
+        $orderData = $orderDetails->map(function ($orderDetail) use ($batch_id) {
+            $quantity = OrderDetailBatch::where('order_detail_id', $orderDetail->order_detail_id)
+                ->where('batch_id', $batch_id)
+                ->sum('quantity');
+
+            return [
+                'order_id' => $orderDetail->order->order_id,
+                'order_detail_id' => $orderDetail->order_detail_id,
+                'product_count' => $quantity,
+                'bill_id' => $orderDetail->order->bill_id,
+            ];
+        });
+
+        // Chuẩn bị kết quả để trả về
+        $result = [
+            'batch' => $batch,
+            'orders' => $orderData,
+        ];
+
+        // Trả về kết quả dnder dạng JSON
+        return response()->json($result);
     }
 }
