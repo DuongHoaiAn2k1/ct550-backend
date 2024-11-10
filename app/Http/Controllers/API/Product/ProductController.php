@@ -910,4 +910,35 @@ class ProductController extends Controller
             ], 500);
         }
     }
+
+    public function searchAIMini(Request $request)
+    {
+        try {
+            $query = $request->input('query');
+            if (empty($query)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Trường query không được để trống'
+                ], 400);
+            }
+            $client = new \GuzzleHttp\Client();
+            $response = $client->post('http://python-search:8000/api/search/', [
+                'json' => [
+                    'query' => $query
+                ]
+            ]);
+            $body = json_decode($response->getBody(), true);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Lấy dữ liệu từ API thành công',
+                'data' => $body
+            ], 200);
+        } catch (\Exception $e) {
+            // Xử lý lỗi và trả về thông báo lỗi
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
