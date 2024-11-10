@@ -18,3 +18,4 @@ yarn-error.log
 /.idea
 /.vscode
 ct466_database.sql
+docker/cron/
