@@ -23,15 +23,13 @@ services:
       - REDIS_HOST=redis
 
   mysql:
-    build:
-      context: docker/mysql
-      dockerfile: Mysql.Dockerfile
+    image: mysql:8.0.33
     volumes:
-      # - ./docker/mysql/conf.d:/etc/mysql/conf.d
       - db-store:/var/lib/mysql
+      - ./docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
     ports:
       - "3306:3306"
-    restart: unless-stopped
+    restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: ct550_db
@@ -102,7 +100,9 @@ services:
 
 volumes:
   db-store:
+    driver: local
   redis-data:
+    driver: local
 
 networks:
   network-app:
