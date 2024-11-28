@@ -112,14 +112,15 @@ class BatchController extends Controller
             'quantity.required' => 'Số lượng không được để trống',
             'entry_date.required' => 'Ngày nhập không được để trống',
             'expiry_date.required' => 'Ngày hết hạn không được để trống',
+            'expiry_date.after_or_equal' => 'Ngày hết hạn phải lớn hơn hoặc bằng ngày nhập',
             'batch_cost.required' => 'Giá nhập không được để trống',
         ];
 
         $validator = Validator::make($request->all(), [
             'product_id' => 'required|exists:products,product_id',
             'quantity' => 'required|integer|min:1',
-            'entry_date' => 'required',
-            'expiry_date' => 'required',
+            'entry_date' => 'required|date',
+            'expiry_date' => 'required|date|after_or_equal:entry_date',
             'batch_cost' => 'required|integer|min:0',
         ], $customMessage);
 
@@ -154,6 +155,7 @@ class BatchController extends Controller
             ], 500);
         }
     }
+
 
     // Phương thức để cập nhật thông tin lô hàng
     public function update(Request $request, $batch_id)

@@ -32,9 +32,11 @@ Route::middleware(['auth', 'role:normal_user|loyal_customer|admin|staff'])->pref
 
     Route::prefix('/sale')->group(function () {
         Route::get('/list', [AffiliateSaleController::class, 'index']);
+        Route::get('/get-list-order-sale', [AffiliateSaleController::class, 'getListAffiliateOrderSale']);
         Route::post('/create', [AffiliateSaleController::class, 'store']);
         Route::get('/get-by-user', [AffiliateSaleController::class, 'getByUser']);
         Route::patch('/update/{order_id}', [AffiliateSaleController::class, 'changOrderStatus']);
+        Route::post('/calculate/affiliate-statistic', [AffiliateSaleController::class, 'calculateAffiliateStatistics']);
     });
 
     Route::prefix('/wallet')->group(function () {

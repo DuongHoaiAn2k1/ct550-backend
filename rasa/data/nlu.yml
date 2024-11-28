@@ -1,0 +1,490 @@
+version: "3.1"
+nlu:
+  - intent: chao_hoi
+    examples: |
+      - xin chào
+      - chào bạn
+      - hi
+      - hello
+      - chào buổi sáng
+      - chào buổi tối
+      - chào
+      - ê
+      - có ai không
+      - :))
+
+  - intent: suc_khoe
+    examples: |
+      - Bạn có khỏe
+      - Khỏe không bạn
+      - Khỏe không mày
+      - Bạn sao rồi
+      - Có ổn không
+
+  - intent: tam_biet
+    examples: |
+      - tạm biệt
+      - chào tạm biệt
+      - bye
+      - hẹn gặp lại
+      - gặp lại sau
+
+  - intent: xac_nhan
+    examples: |
+      - đúng rồi
+      - chính xác
+      - đúng vậy
+      - phải
+      - vâng
+
+  - intent: phu_nhan
+    examples: |
+      - không phải
+      - sai rồi
+      - không đúng
+      - không
+      
+  - intent: hoi_san_pham
+    examples: |
+      - cửa hàng bán sản phẩm gì?
+      - các sản phẩm ở cửa hàng là gì?
+      - bạn bán hàng gì?
+      - cửa hàng có gì bán?
+      - cửa hàng kinh doanh sản phẩm nào?
+
+  - intent: hoi_danh_muc
+    examples: |
+      - bạn có những loại sản phẩm nào?
+      - các danh mục sản phẩm là gì?
+      - cho tôi biết danh mục sản phẩm
+      - cửa hàng bán những loại hàng hóa nào?
+  
+  - intent: hoi_nhan_vien
+    examples: |
+      - Tôi cần gặp nhân viên
+      - Tôi cần nói chuyện với người thật
+      - Tôi muốn gặp chủ cửa hàng
+      - Có bạn nhân viên nào không ạ?
+
+  - intent: search_product
+    examples: |
+      - Tôi muốn mua [Khô cá đuối đen](product)
+      - Có [Khô cá đuối đen](product) nào không?
+      - Tìm giúp tôi [Khô cá đuối đen](product)
+      - Mua [Khô cá đuối đen](product)
+      - Tôi cần mua [Khô cá đuối đen](product)
+      - Tôi muốn tìm [Khô cá đuối đen](product) có thượng
+      - Tôi muốn tìm [Khô cá đuối đen](product) có hạng
+      - Tôi muốn tìm [Khô cá đuối đen](product) có phẩm
+      - Tôi muốn tìm [Khô cá đuối đen](product) có màu
+      - Tôi muốn tìm [Khô cá đuối đen](product) có không
+      - Tôi muốn mua [Khô cá sặc](product)
+      - Có [Khô cá sặc](product) nào không?
+      - Tìm giúp tôi [Khô cá sặc](product)
+      - Mua [Khô cá sặc](product)
+      - Tôi cần mua [Khô cá sặc](product)
+      - Tôi muốn tìm [Khô cá sặc](product) có phẩm
+      - Tôi muốn tìm [Khô cá sặc](product) có màu
+      - Tôi muốn tìm [Khô cá sặc](product) có không
+      - Tôi muốn tìm [Khô cá sặc](product) có chất
+      - Tôi muốn tìm [Khô cá sặc](product) có bảo
+      - Tôi muốn mua [Khô cá chạch đồng](product)
+      - Tìm giúp tôi [Khô cá chạch đồng](product)
+      - Có [Khô cá chạch đồng](product) nào không?
+      - Mua [Khô cá chạch đồng](product)
+      - Tôi cần mua [Khô cá chạch đồng](product) chất lượng cao
+      - Tôi muốn tìm [Khô cá chạch đồng](product) không hóa chất
+      - Tôi muốn tìm [Khô cá chạch đồng](product) làm quà biếu
+      - Tôi muốn tìm [Khô cá chạch đồng](product) giá rẻ
+      - Tôi muốn tìm [Khô cá chạch đồng](product) giao hàng tận nơi
+      - Tôi muốn mua [Khô cá cơm](product)
+      - Tìm giúp tôi [Khô cá cơm](product)
+      - Có [Khô cá cơm](product) nào không?
+      - Mua [Khô cá cơm](product)
+      - Tôi cần mua [Khô cá cơm](product) chất lượng cao
+      - Tôi muốn tìm [Khô cá cơm](product) không hóa chất
+      - Tôi muốn tìm [Khô cá cơm](product) làm quà biếu
+      - Tôi muốn tìm [Khô cá cơm](product) giá rẻ
+      - Tôi muốn tìm [Khô cá cơm](product) giao hàng tận nơi
+      - Tôi muốn mua [Khô cá đù](product)
+      - Tìm giúp tôi [Khô cá đù](product)
+      - Có [Khô cá đù](product) nào không?
+      - Mua [Khô cá đù](product)
+      - Tôi cần mua [Khô cá đù](product) chất lượng cao
+      - Tôi muốn tìm [Khô cá đù](product) không hóa chất
+      - Tôi muốn tìm [Khô cá đù](product) làm quà biếu
+      - Tôi muốn tìm [Khô cá đù](product) giá rẻ
+      - Tôi muốn tìm [Khô cá đù](product) giao hàng tận nơi
+      - Tôi muốn mua [Khô cá dứa](product)
+      - Tìm giúp tôi [Khô cá dứa](product)
+      - Có [Khô cá dứa](product) nào không?
+      - Mua [Khô cá dứa](product)
+      - Tôi cần mua [Khô cá dứa](product) chất lượng cao
+      - Tôi muốn tìm [Khô cá dứa](product) không hóa chất
+      - Tôi muốn tìm [Khô cá dứa](product) làm quà biếu
+      - Tôi muốn tìm [Khô cá dứa](product) giá rẻ
+      - Tôi muốn tìm [Khô cá dứa](product) giao hàng tận nơi
+      - Tôi muốn mua [Khô cá kết](product)
+      - Tìm giúp tôi [Khô cá kết](product)
+      - Có [Khô cá kết](product) nào không?
+      - Mua [Khô cá kết](product)
+      - Tôi cần mua [Khô cá kết](product) chất lượng cao
+      - Tôi muốn tìm [Khô cá kết](product) không hóa chất
+      - Tôi muốn tìm [Khô cá kết](product) làm quà biếu
+      - Tôi muốn tìm [Khô cá kết](product) giá rẻ
+      - Tôi muốn tìm [Khô cá kết](product) giao hàng tận nơi
+      - Tôi muốn mua [Khô cá lóc non](product)
+      - Tìm giúp tôi [Khô cá lóc non](product)
+      - Có [Khô cá lóc non](product) nào không?
+      - Mua [Khô cá lóc non](product)
+      - Tôi cần mua [Khô cá lóc non](product) chất lượng cao
+      - Tôi muốn tìm [Khô cá lóc non](product) không hóa chất
+      - Tôi muốn tìm [Khô cá lóc non](product) làm quà biếu
+      - Tôi muốn tìm [Khô cá lóc non](product) giá rẻ
+      - Tôi muốn tìm [Khô cá lóc non](product) giao hàng tận nơi
+      - Tôi muốn mua [Khô cá mối](product)
+      - Tìm giúp tôi [Khô cá mối](product)
+      - Có [Khô cá mối](product) nào không?
+      - Mua [Khô cá mối](product)
+      - Tôi cần mua [Khô cá mối](product) chất lượng cao
+      - Tôi muốn tìm [Khô cá mối](product) không hóa chất
+      - Tôi muốn tìm [Khô cá mối](product) làm quà biếu
+      - Tôi muốn tìm [Khô cá mối](product) giá rẻ
+      - Tôi muốn tìm [Khô cá mối](product) giao hàng tận nơi
+      - Tôi muốn mua [Khô cá sặc rằn](product)
+      - Tìm giúp tôi [Khô cá sặc rằn](product)
+      - Có [Khô cá sặc rằn](product) nào không?
+      - Mua [Khô cá sặc rằn](product)
+      - Tôi cần mua [Khô cá sặc rằn](product) chất lượng cao
+      - Tôi muốn tìm [Khô cá sặc rằn](product) không hóa chất
+      - Tôi muốn tìm [Khô cá sặc rằn](product) làm quà biếu
+      - Tôi muốn tìm [Khô cá sặc rằn](product) giá rẻ
+      - Tôi muốn tìm [Khô cá sặc rằn](product) giao hàng tận nơi
+      - Tôi muốn mua [Khô cá thiều](product)
+      - Tìm giúp tôi [Khô cá thiều](product)
+      - Có [Khô cá thiều](product) nào không?
+      - Mua [Khô cá thiều](product)
+      - Tôi cần mua [Khô cá thiều](product) chất lượng cao
+      - Tôi muốn tìm [Khô cá thiều](product) không hóa chất
+      - Tôi muốn tìm [Khô cá thiều](product) làm quà biếu
+      - Tôi muốn tìm [Khô cá thiều](product) giá rẻ
+      - Tôi muốn tìm [Khô cá thiều](product) giao hàng tận nơi
+      - Tôi muốn mua [Khô cá thòi lòi](product)
+      - Tìm giúp tôi [Khô cá thòi lòi](product)
+      - Có [Khô cá thòi lòi](product) nào không?
+      - Mua [Khô cá thòi lòi](product)
+      - Tôi cần mua [Khô cá thòi lòi](product) chất lượng cao
+      - Tôi muốn tìm [Khô cá thòi lòi](product) không hóa chất
+      - Tôi muốn tìm [Khô cá thòi lòi](product) làm quà biếu
+      - Tôi muốn tìm [Khô cá thòi lòi](product) giá rẻ
+      - Tôi muốn tìm [Khô cá thòi lòi](product) giao hàng tận nơi
+      - Tôi muốn mua [Khô cá thu](product)
+      - Tìm giúp tôi [Khô cá thu](product)
+      - Có [Khô cá thu](product) nào không?
+      - Mua [Khô cá thu](product)
+      - Tôi cần mua [Khô cá thu](product) chất lượng cao
+      - Tôi muốn tìm [Khô cá thu](product) không hóa chất
+      - Tôi muốn tìm [Khô cá thu](product) làm quà biếu
+      - Tôi muốn tìm [Khô cá thu](product) giá rẻ
+      - Tôi muốn tìm [Khô cá thu](product) giao hàng tận nơi
+      - Tôi muốn mua [Cá sặc 1 nắng](product)
+      - Tìm giúp tôi [Cá sặc 1 nắng](product)
+      - Có [Cá sặc 1 nắng](product) nào không?
+      - Mua [Cá sặc 1 nắng](product)
+      - Tôi cần mua [Cá sặc 1 nắng](product) chất lượng cao
+      - Tôi muốn tìm [Cá sặc 1 nắng](product) không hóa chất
+      - Tôi muốn tìm [Cá sặc 1 nắng](product) làm quà biếu
+      - Tôi muốn tìm [Cá sặc 1 nắng](product) giá rẻ
+      - Tôi muốn tìm [Cá sặc 1 nắng](product) giao hàng tận nơi
+      - Tôi muốn mua [Gò má cá lóc 1 nắng](product)
+      - Tìm giúp tôi [Gò má cá lóc 1 nắng](product)
+      - Có [Gò má cá lóc 1 nắng](product) nào không?
+      - Mua [Gò má cá lóc 1 nắng](product)
+      - Tôi cần mua [Gò má cá lóc 1 nắng](product) chất lượng cao
+      - Tôi muốn tìm [Gò má cá lóc 1 nắng](product) không hóa chất
+      - Tôi muốn tìm [Gò má cá lóc 1 nắng](product) làm quà biếu
+      - Tôi muốn tìm [Gò má cá lóc 1 nắng](product) giá rẻ
+      - Tôi muốn tìm [Gò má cá lóc 1 nắng](product) giao hàng tận nơi
+      - Tôi muốn mua [Khô cá đổng](product)
+      - Tìm giúp tôi [Khô cá đổng](product)
+      - Có [Khô cá đổng](product) nào không?
+      - Mua [Khô cá đổng](product)
+      - Tôi cần mua [Khô cá đổng](product) chất lượng cao
+      - Tôi muốn tìm [Khô cá đổng](product) không hóa chất
+      - Tôi muốn tìm [Khô cá đổng](product) làm quà biếu
+      - Tôi muốn tìm [Khô cá đổng](product) giá rẻ
+      - Tôi muốn tìm [Khô cá đổng](product) giao hàng tận nơi
+      - Tôi muốn mua [Khô cá lưỡi trâu](product)
+      - Tìm giúp tôi [Khô cá lưỡi trâu](product)
+      - Có [Khô cá lưỡi trâu](product) nào không?
+      - Mua [Khô cá lưỡi trâu](product)
+      - Tôi cần mua [Khô cá lưỡi trâu](product) chất lượng cao
+      - Tôi muốn tìm [Khô cá lưỡi trâu](product) không hóa chất
+      - Tôi muốn tìm [Khô cá lưỡi trâu](product) làm quà biếu
+      - Tôi muốn tìm [Khô cá lưỡi trâu](product) giá rẻ
+      - Tôi muốn tìm [Khô cá lưỡi trâu](product) giao hàng tận nơi
+      - Tôi muốn mua [Khô cá sặc trứng](product)
+      - Tìm giúp tôi [Khô cá sặc trứng](product)
+      - Có [Khô cá sặc trứng](product) nào không?
+      - Mua [Khô cá sặc trứng](product)
+      - Tôi cần mua [Khô cá sặc trứng](product) chất lượng cao
+      - Tôi muốn tìm [Khô cá sặc trứng](product) không hóa chất
+      - Tôi muốn tìm [Khô cá sặc trứng](product) làm quà biếu
+      - Tôi muốn tìm [Khô cá sặc trứng](product) giá rẻ
+      - Tôi muốn tìm [Khô cá sặc trứng](product) giao hàng tận nơi
+      - Tôi muốn mua [Khô cá đù 1 nắng](product)
+      - Tìm giúp tôi [Khô cá đù 1 nắng](product)
+      - Có [Khô cá đù 1 nắng](product) nào không?
+      - Mua [Khô cá đù 1 nắng](product)
+      - Tôi cần mua [Khô cá đù 1 nắng](product) chất lượng cao
+      - Tôi muốn tìm [Khô cá đù 1 nắng](product) không hóa chất
+      - Tôi muốn tìm [Khô cá đù 1 nắng](product) làm quà biếu
+      - Tôi muốn tìm [Khô cá đù 1 nắng](product) giá rẻ
+      - Tôi muốn tìm [Khô cá đù 1 nắng](product) giao hàng tận nơi
+      - Tôi muốn mua [Tôm đất khô](product)
+      - Tìm giúp tôi [Tôm đất khô](product)
+      - Có [Tôm đất khô](product) nào không?
+      - Mua [Tôm đất khô](product)
+      - Tôi cần mua [Tôm đất khô](product) chất lượng cao
+      - Tôi muốn tìm [Tôm đất khô](product) không hóa chất
+      - Tôi muốn tìm [Tôm đất khô](product) làm quà biếu
+      - Tôi muốn tìm [Tôm đất khô](product) giá rẻ
+      - Tôi muốn tìm [Tôm đất khô](product) giao hàng tận nơi
+      - Tôi muốn mua [Tôm khô chà bông](product)
+      - Tìm giúp tôi [Tôm khô chà bông](product)
+      - Có [Tôm khô chà bông](product) nào không?
+      - Mua [Tôm khô chà bông](product)
+      - Tôi cần mua [Tôm khô chà bông](product) chất lượng cao
+      - Tôi muốn tìm [Tôm khô chà bông](product) không hóa chất
+      - Tôi muốn tìm [Tôm khô chà bông](product) làm quà biếu
+      - Tôi muốn tìm [Tôm khô chà bông](product) giá rẻ
+      - Tôi muốn tìm [Tôm khô chà bông](product) giao hàng tận nơi
+      - Tôi muốn mua [Tôm khô nấu canh](product)
+      - Tìm giúp tôi [Tôm khô nấu canh](product)
+      - Có [Tôm khô nấu canh](product) nào không?
+      - Mua [Tôm khô nấu canh](product)
+      - Tôi cần mua [Tôm khô nấu canh](product) chất lượng cao
+      - Tôi muốn tìm [Tôm khô nấu canh](product) không hóa chất
+      - Tôi muốn tìm [Tôm khô nấu canh](product) làm quà biếu
+      - Tôi muốn tìm [Tôm khô nấu canh](product) giá rẻ
+      - Tôi muốn tìm [Tôm khô nấu canh](product) giao hàng tận nơi
+      - Tôi muốn mua [Tôm khô nguyên võ](product)
+      - Tìm giúp tôi [Tôm khô nguyên võ](product)
+      - Có [Tôm khô nguyên võ](product) nào không?
+      - Mua [Tôm khô nguyên võ](product)
+      - Tôi cần mua [Tôm khô nguyên võ](product) chất lượng cao
+      - Tôi muốn tìm [Tôm khô nguyên võ](product) không hóa chất
+      - Tôi muốn tìm [Tôm khô nguyên võ](product) làm quà biếu
+      - Tôi muốn tìm [Tôm khô nguyên võ](product) giá rẻ
+      - Tôi muốn tìm [Tôm khô nguyên võ](product) giao hàng tận nơi
+      - Tôi muốn mua [Tôm tích khô](product)
+      - Tìm giúp tôi [Tôm tích khô](product)
+      - Có [Tôm tích khô](product) nào không?
+      - Mua [Tôm tích khô](product)
+      - Tôi cần mua [Tôm tích khô](product) chất lượng cao
+      - Tôi muốn tìm [Tôm tích khô](product) không hóa chất
+      - Tôi muốn tìm [Tôm tích khô](product) làm quà biếu
+      - Tôi muốn tìm [Tôm tích khô](product) giá rẻ
+      - Tôi muốn tìm [Tôm tích khô](product) giao hàng tận nơi
+      - Tôi muốn mua [Chả tôm Cà Mau](product)
+      - Tìm giúp tôi [Chả tôm Cà Mau](product)
+      - Có [Chả tôm Cà Mau](product) nào không?
+      - Mua [Chả tôm Cà Mau](product)
+      - Tôi cần mua [Chả tôm Cà Mau](product) chất lượng cao
+      - Tôi muốn tìm [Chả tôm Cà Mau](product) không hóa chất
+      - Tôi muốn tìm [Chả tôm Cà Mau](product) làm quà biếu
+      - Tôi muốn tìm [Chả tôm Cà Mau](product) giá rẻ
+      - Tôi muốn tìm [Chả tôm Cà Mau](product) giao hàng tận nơi
+      - Tôi muốn mua [Lạp xưởng tôm](product)
+      - Tìm giúp tôi [Lạp xưởng tôm](product)
+      - Có [Lạp xưởng tôm](product) nào không?
+      - Mua [Lạp xưởng tôm](product)
+      - Tôi cần mua [Lạp xưởng tôm](product) chất lượng cao
+      - Tôi muốn tìm [Lạp xưởng tôm](product) không hóa chất
+      - Tôi muốn tìm [Lạp xưởng tôm](product) làm quà biếu
+      - Tôi muốn tìm [Lạp xưởng tôm](product) giá rẻ
+      - Tôi muốn tìm [Lạp xưởng tôm](product) giao hàng tận nơi
+      - Tôi muốn mua [Mật ong rừng](product)
+      - Tìm giúp tôi [Mật ong rừng](product)
+      - Có [Mật ong rừng](product) nào không?
+      - Mua [Mật ong rừng](product)
+      - Tôi cần mua [Mật ong rừng](product) chất lượng cao
+      - Tôi muốn tìm [Mật ong rừng](product) không hóa chất
+      - Tôi muốn tìm [Mật ong rừng](product) làm quà biếu
+      - Tôi muốn tìm [Mật ong rừng](product) giá rẻ
+      - Tôi muốn tìm [Mật ong rừng](product) giao hàng tận nơi
+      - Tôi muốn mua [Mật ong ruồi](product)
+      - Tìm giúp tôi [Mật ong ruồi](product)
+      - Có [Mật ong ruồi](product) nào không?
+      - Mua [Mật ong ruồi](product)
+      - Tôi cần mua [Mật ong ruồi](product) chất lượng cao
+      - Tôi muốn tìm [Mật ong ruồi](product) không hóa chất
+      - Tôi muốn tìm [Mật ong ruồi](product) làm quà biếu
+      - Tôi muốn tìm [Mật ong ruồi](product) giá rẻ
+      - Tôi muốn tìm [Mật ong ruồi](product) giao hàng tận nơi
+      - Tôi muốn mua [Mắm ba Khía](product)
+      - Tìm giúp tôi [Mắm ba Khía](product)
+      - Có [Mắm ba Khía](product) nào không?
+      - Mua [Mắm ba Khía](product)
+      - Tôi cần mua [Mắm ba Khía](product) chất lượng cao
+      - Tôi muốn tìm [Mắm ba Khía](product) không hóa chất
+      - Tôi muốn tìm [Mắm ba Khía](product) làm quà biếu
+      - Tôi muốn tìm [Mắm ba Khía](product) giá rẻ
+      - Tôi muốn tìm [Mắm ba Khía](product) giao hàng tận nơi
+      - Tôi muốn mua [Mắm cá lóc](product)
+      - Tìm giúp tôi [Mắm cá lóc](product)
+      - Có [Mắm cá lóc](product) nào không?
+      - Mua [Mắm cá lóc](product)
+      - Tôi cần mua [Mắm cá lóc](product) chất lượng cao
+      - Tôi muốn tìm [Mắm cá lóc](product) không hóa chất
+      - Tôi muốn tìm [Mắm cá lóc](product) làm quà biếu
+      - Tôi muốn tìm [Mắm cá lóc](product) giá rẻ
+      - Tôi muốn tìm [Mắm cá lóc](product) giao hàng tận nơi
+      - Tôi muốn mua [Mắm tép](product)
+      - Tìm giúp tôi [Mắm tép](product)
+      - Có [Mắm tép](product) nào không?
+      - Mua [Mắm tép](product)
+      - Tôi cần mua [Mắm tép](product) chất lượng cao
+      - Tôi muốn tìm [Mắm tép](product) không hóa chất
+      - Tôi muốn tìm [Mắm tép](product) làm quà biếu
+      - Tôi muốn tìm [Mắm tép](product) giá rẻ
+      - Tôi muốn tìm [Mắm tép](product) giao hàng tận nơi
+      - Tôi muốn mua [Khô mực](product)
+      - Tìm giúp tôi [Khô mực](product)
+      - Có [Khô mực](product) nào không?
+      - Mua [Khô mực](product)
+      - Tôi cần mua [Khô mực](product) chất lượng cao
+      - Tôi muốn tìm [Khô mực](product) không hóa chất
+      - Tôi muốn tìm [Khô mực](product) làm quà biếu
+      - Tôi muốn tìm [Khô mực](product) giá rẻ
+      - Tôi muốn tìm [Khô mực](product) giao hàng tận nơi
+      - Tôi muốn mua [Bánh phồng](product)
+      - Tìm giúp tôi [Bánh phồng](product)
+      - Có [Bánh phồng](product) nào không?
+      - Mua [Bánh phồng](product)
+      - Tôi cần mua [Bánh phồng](product) chất lượng cao
+      - Tôi muốn tìm [Bánh phồng](product) không hóa chất
+      - Tôi muốn tìm [Bánh phồng](product) làm quà biếu
+      - Tôi muốn tìm [Bánh phồng](product) giá rẻ
+      - Tôi muốn tìm [Bánh phồng](product) giao hàng tận nơi
+      - Tôi muốn mua [Rượu](product)
+      - Tìm giúp tôi [Rượu](product)
+      - Có [Rượu](product) nào không?
+      - Mua [Rượu](product)
+      - Tôi cần mua [Rượu](product) chất lượng cao
+      - Tôi muốn tìm [Rượu](product) không hóa chất
+      - Tôi muốn tìm [Rượu](product) làm quà biếu
+      - Tôi muốn tìm [Rượu](product) giá rẻ
+      - Tôi muốn tìm [Rượu](product) giao hàng tận nơi
+      - Tôi muốn mua [Khô rắn](product)
+      - Tìm giúp tôi [Khô rắn](product)
+      - Có [Khô rắn](product) nào không?
+      - Mua [Khô rắn](product)
+      - Tôi cần mua [Khô rắn](product) chất lượng cao
+      - Tôi muốn tìm [Khô rắn](product) không hóa chất
+      - Tôi muốn tìm [Khô rắn](product) làm quà biếu
+      - Tôi muốn tìm [Khô rắn](product) giá rẻ
+      - Tôi muốn tìm [Khô rắn](product) giao hàng tận nơi
+      - Làm quà tặng thì mua sản phẩm nào
+      - Tôi cần sản phẩm làm quà tặng
+      - Tôi cần sản phẩm làm quà biếu
+      - Sản phẩm nào không có chất bảo quản
+      - Tôi cần sản phẩm không có chất bảo quản
+      - Tôi cần sản phẩm để nấu canh
+      - Nấu canh thì mua sản phẩm nào
+      - Có bán bánh không
+      - Có bán cá không
+
+  - intent: hoi_khong_co
+    examples: |
+      - Bạn có bán bột giặt không
+      - Có bán bột giặt không
+      - Có bán điện thoại không
+      - Có bán laptop không
+      - Có bán máy tính không
+      - Có bán sữa chua không
+      - Có sửa chua không
+      - Có bán rau không
+      - Có bán sim điện thoại không
+      - Có bán xe không
+      - Có bán nhạc không
+      - Tôi cần mua bột giặt
+      - Tôi cần mua điện thoại
+      - Tôi cần mua laptop
+      - Tôi cần mua máy tính
+      - Tôi cần mua sữa chua
+      - Tôi cần mua sữa
+      - Tôi cần mua rau
+      - Tôi cần mua sim điện thoại
+      - Tôi cần mua xe
+      - Tôi cần mua nhạc
+
+  - intent: hoi_cach_mua_hang
+    examples: |
+      - Làm sao để tiến hàng mua hàng
+      - Tôi muốn mua sản phẩm thì phải làm thế nào
+      - Làm sao để sử dụng các sản phẩm của cửa hàng
+      - Tôi không biết mua hàng
+      - Hãy hướng dẫn tôi mua hàng
+      - Hướng dẫn tôi cách mua hàng và đặt sản phẩm
+      - Hướng dẫn tôi sử dụng chức năng đặt hàng
+
+  - intent: hoi_chuc_nang
+    examples: |
+      - Bạn cung cấp những chức năng nào
+      - Hệ thống có những chức năng nào
+      - Chức năng trong hệ thống là gì
+      - Tôi có thể làm gì trong hệ thống
+      - Cung cấp chức năng trong hệ thống
+      - Cung cấp những chức năng nào
+      - Cung cấp chức năng nào
+
+  - intent: hoi_ban_la_ai
+    examples: |
+      - Bạn là ai vậy
+      - Cậu là ai
+      - Mày là ai
+      - Nhà ngươi là ai
+      - Bạn có phải người thật không
+      - Có phải bạn là chatbot không
+      - Bạn là chatbot à
+      - Who are you
+  
+  - intent: hoi_toi_la_ai
+    examples: |
+      - Tôi là ai
+      - Tôi đang là ai
+      - Tôi gì
+      - who am i
+      - bạn biết tôi là ai không
+      - Do you know me
+  
+  - intent: hoi_khuyen_mai
+    examples: |
+      - Hiện tại bạn có các chương trình khuyến mãi nào?
+      - Cho tôi biết các chương trình khuyến mãi đang diễn ra.
+      - Các chương trình khuyến mãi hiện tại là gì?
+      - Tôi muốn biết khuyến mãi hiện tại
+
+  - intent: hoi_san_pham_khuyen_mai
+    examples: |
+      - Bạn có những sản phẩm khuyến mãi nào?
+      - Sản phẩm đang khuyến mãi là gì?
+      - Cho tôi xem các sản phẩm khuyến mãi hiện tại
+      - Tôi muốn xem các chương trình khuyến mãi hiện tại
+  
+  - intent: hoi_san_pham_gia_cao_nhat
+    examples: |
+      - Sản phẩm nào có giá cao nhất?
+      - Cho tôi biết sản phẩm đắt nhất
+      - Sản phẩm nào có giá trị cao nhất?
+      - Sản phẩm giá cao nhất là gì?
+      - Hãy cho tôi biết sản phẩm có giá cao nhất
+
+  - intent: hoi_san_pham_gia_thap_nhat
+    examples: |
+      - Sản phẩm nào có giá thấp nhất?
+      - Cho tôi biết sản phẩm rẻ nhất
+      - Sản phẩm nào có giá trị thấp nhất?
+      - Sản phẩm giá thấp nhất là gì?
+      - Hãy cho tôi biết sản phẩm có giá thấp nhất

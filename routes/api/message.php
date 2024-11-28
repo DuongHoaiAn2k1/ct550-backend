@@ -13,4 +13,5 @@ Route::middleware(['auth', 'role:normal_user|loyal_customer|admin|staff'])->pref
     Route::post('/', [MessageController::class, 'store'])->middleware('permission:message store');
     Route::delete('/{id}', [MessageController::class, 'destroy']);
     Route::get('/user/all', [MessageController::class, 'getUsersWithMessages']);
+    Route::post('/send-to-chatbot', [MessageController::class, 'sendToChatbot']);
 });

@@ -7,6 +7,7 @@ use App\Models\Review;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Favorite;
+use App\Models\OrderDetail;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
@@ -591,8 +592,7 @@ class ProductController extends Controller
             ], 422);
         } else {
             try {
-                $existProduct = Product::where('product_name', $request->product_name)
-                    ->where('product_id', $product_id)
+                $existProduct = Product::where('product_id', $product_id)
                     ->first();
                 if (!$existProduct) {
                     return response()->json([
@@ -880,6 +880,119 @@ class ProductController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getTopSellingProducts()
+    {
+        try {
+            $topSellingProductData = OrderDetail::select('product_id')
+                ->selectRaw('SUM(quantity) as total_sold')
+                ->whereHas('order', function ($query) {
+                    $query->where('status', 'delivered');
+                })
+                ->groupBy('product_id')
+                ->orderByDesc('total_sold')
+                ->limit(10)
+                ->get();
+
+            $productIds = $topSellingProductData->pluck('product_id');
+
+            $products = Product::with([
+                'product_promotion' => function ($query) {
+                    $query->whereHas('promotion', function ($q) {
+                        $q->where('status', 'active');
+                    });
+                },
+                'product_promotion.promotion',
+                'batches' => function ($query) {
+                    $query->whereHas('batchPromotion', function ($q) {
+                        $q->whereHas('promotion', function ($q) {
+                            $q->where('status', 'active');
+                        });
+                    });
+                },
+                'batches.batchPromotion.promotion'
+            ])->whereIn('product_id', $productIds)
+                ->get()
+                ->map(function ($product) use ($topSellingProductData) {
+                    // Gắn total_sold vào sản phẩm
+                    $product->total_sold = $topSellingProductData->firstWhere('product_id', $product->product_id)->total_sold;
+
+                    // Tính tổng số lượng khả dụng từ các batches
+                    $available_quantity = (int) Batch::where('product_id', $product->product_id)
+                        ->where('status', 'Active')
+                        ->sum('quantity');
+
+                    $expiring_soon_quantity = (int) Batch::where('product_id', $product->product_id)
+                        ->where('status', 'Expiring Soon')
+                        ->whereHas('batchPromotion')->whereHas('batchPromotion.promotion', function ($query) {
+                            $query->where('status', 'active');
+                        })
+                        ->sum('quantity');
+
+                    $available_quantity += $expiring_soon_quantity;
+
+                    $product_quantity_batch_promotion = $product->batches->reduce(function ($carry, $batch) {
+                        return $carry + $batch->quantity;
+                    }, 0);
+
+                    $average_rating = (float) Review::where('product_id', $product->product_id)->avg('rating');
+
+                    $product->available_quantity = $available_quantity;
+                    $product->product_quantity_batch_promotion = $product_quantity_batch_promotion;
+                    $product->average_rating = $average_rating ? round($average_rating, 2) : null;
+
+                    if ($product->batches->isEmpty()) {
+                        unset($product->batches);
+                    }
+
+                    if (auth()->check()) {
+                        $user_id = auth()->user()->id;
+                        $roles = auth()->user()->getRoleNames();
+
+                        $mainRole = $roles->filter(function ($role) {
+                            return $role !== 'affiliate_marketer';
+                        })->first();
+
+                        $is_favorite = Favorite::where('user_id', $user_id)
+                            ->where('product_id', $product->product_id)
+                            ->exists();
+
+                        $product->liked = $is_favorite;
+
+                        $product->product_promotion = $product->product_promotion->filter(function ($promotion) use ($mainRole) {
+                            $user_groups = json_decode($promotion->promotion->user_group, true);
+
+                            if (is_array($user_groups) && in_array($mainRole, $user_groups)) {
+                                return true;
+                            }
+                            return false;
+                        });
+
+                        if ($product->product_promotion->isEmpty()) {
+                            unset($product->product_promotion);
+                        }
+                    } else {
+                        $product->liked = false;
+                        unset($product->product_promotion);
+                    }
+
+                    return $product;
+                });
+
+            $sortedProducts = $products->sortByDesc('total_sold')->values();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Lấy danh sách sản phẩm bán chạy thành công',
+                'data' => $sortedProducts,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
             ], 500);
         }
     }

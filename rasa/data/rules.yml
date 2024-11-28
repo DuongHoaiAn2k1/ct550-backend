@@ -1,0 +1,83 @@
+version: "3.1"
+rules:
+  - rule: Chào hỏi
+    steps:
+      - intent: chao_hoi
+      - action: utter_chao_hoi
+
+  - rule: Sức khỏe
+    steps:
+      - intent: suc_khoe
+      - action: utter_suc_khoe
+  
+  - rule: Tạm biệt
+    steps:
+      - intent: tam_biet
+      - action: utter_tam_biet
+  
+  - rule: Hỏi sản phẩm
+    steps:
+      - intent: hoi_san_pham
+      - action: utter_hoi_san_pham
+
+  - rule: Hỏi danh mục sản phẩm
+    steps:
+      - intent: hoi_danh_muc
+      - action: action_fetch_categories
+
+  - rule: Hỏi nhân viên
+    steps:
+      - intent: hoi_nhan_vien
+      - action: utter_hoi_nhan_vien
+  
+  - rule: Find products
+    steps:
+      - intent: search_product
+      - action: action_search_products
+
+  - rule: Hỏi không có
+    steps:
+      - intent: hoi_khong_co
+      - action: utter_hoi_khong_co
+
+  - rule: Hỏi cách mua hàng
+    steps:
+      - intent: hoi_cach_mua_hang
+      - action: utter_hoi_cach_mua_hang
+
+  - rule: Hỏi chức năng
+    steps:
+      - intent: hoi_chuc_nang
+      - action: utter_hoi_chuc_nang
+
+  - rule: Hỏi bạn là ai
+    steps:
+      - intent: hoi_ban_la_ai
+      - action: utter_hoi_ban_la_ai
+
+  - rule: Hỏi tôi là ai
+    steps:
+      - intent: hoi_toi_la_ai
+      - action: utter_hoi_toi_la_ai
+  
+  - rule: Hỏi khuyến mãi
+    steps:
+      - intent: hoi_khuyen_mai
+      - action: action_show_active_promotions
+  
+  - rule: Hỏi sản phẩm khuyến mãi
+    steps:
+      - intent: hoi_san_pham_khuyen_mai
+      - action: action_get_active_offers
+
+  - rule: Hỏi sản phẩm giá cao nhất
+    steps:
+      - intent: hoi_san_pham_gia_cao_nhat
+      - action: action_get_highest_priced_product
+
+  - rule: Hỏi sản phẩm giá thấp nhất
+    steps:
+      - intent: hoi_san_pham_gia_thap_nhat
+      - action: action_get_lowest_priced_product
+
+

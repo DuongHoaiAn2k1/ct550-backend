@@ -1,0 +1,129 @@
+version: "3.1"
+stories:
+  - story: Chào hỏi
+    steps:
+      - intent: chao_hoi
+      - action: utter_chao_hoi
+      - intent: suc_khoe
+      - action: utter_suc_khoe
+      - intent: tam_biet
+      - action: utter_tam_biet
+  
+  - story: Tạm biệt
+    steps:
+      - intent: chao_hoi
+      - action: utter_chao_hoi
+      - intent: tam_biet
+      - action: utter_tam_biet
+
+  - story: Hỏi sản phẩm
+    steps:
+      - intent: chao_hoi
+      - action: utter_chao_hoi
+      - intent: hoi_san_pham
+      - action: utter_hoi_san_pham
+      - intent: hoi_san_pham_khuyen_mai
+      - action: action_get_active_offers
+      - intent: hoi_san_pham_gia_cao_nhat
+      - action: action_get_highest_priced_product
+      - intent: hoi_san_pham_gia_thap_nhat
+      - action: action_get_lowest_priced_product
+      - intent: tam_biet
+      - action: utter_tam_biet
+
+  - story: Hỏi danh mục sản phẩm
+    steps:
+      - intent: chao_hoi
+      - action: utter_chao_hoi
+      - intent: hoi_danh_muc
+      - action: action_fetch_categories
+      - intent: tam_biet
+      - action: utter_tam_biet
+
+  - story: Hỏi chức năng
+    steps:
+      - intent: chao_hoi
+      - action: utter_chao_hoi
+      - intent: hoi_chuc_nang
+      - action: utter_hoi_chuc_nang
+
+  - story: Hỏi cách mua hàng
+    steps:
+      - intent: chao_hoi
+      - action: utter_chao_hoi
+      - intent: hoi_cach_mua_hang
+      - action: utter_hoi_cach_mua_hang
+      - intent: tam_biet
+      - action: utter_tam_biet
+
+  - story: Hỏi nhân viên
+    steps:
+      - intent: chao_hoi
+      - action: utter_chao_hoi
+      - intent: hoi_nhan_vien
+      - action: utter_hoi_nhan_vien
+      - intent: tam_biet
+      - action: utter_tam_biet
+
+  - story: Tìm sản phẩm
+    steps:
+      - intent: chao_hoi
+      - action: utter_chao_hoi
+      - intent: hoi_san_pham
+      - action: utter_hoi_san_pham
+      - intent: hoi_san_pham_khuyen_mai
+      - action: action_get_active_offers
+      - intent: hoi_san_pham_gia_cao_nhat
+      - action: action_get_highest_priced_product
+      - intent: hoi_san_pham_gia_thap_nhat
+      - action: action_get_lowest_priced_product
+      - intent: tam_biet
+      - action: utter_tam_biet
+
+
+  - story: Hỏi tôi là ai
+    steps:
+      - intent: chao_hoi
+      - action: utter_chao_hoi
+      - intent: hoi_toi_la_ai
+      - action: utter_hoi_toi_la_ai
+      - intent: tam_biet
+      - action: utter_tam_biet
+  
+  - story: Hỏi bạn là ai
+    steps:
+      - intent: chao_hoi
+      - action: utter_chao_hoi
+      - intent: hoi_ban_la_ai
+      - action: utter_hoi_ban_la_ai
+      - intent: tam_biet
+      - action: utter_tam_biet
+
+  - story: Hỏi không có
+    steps:
+      - intent: chao_hoi
+      - action: utter_chao_hoi
+      - intent: hoi_khong_co
+      - action: utter_hoi_khong_co
+      - intent: tam_biet
+      - action: utter_tam_biet
+  
+  - story: Hỏi khuyến mãi
+    steps:
+      - intent: chao_hoi
+      - action: utter_chao_hoi
+      - intent: hoi_khuyen_mai
+      - action: action_show_active_promotions
+      - intent: tam_biet
+      - action: utter_tam_biet
+
+  - story: Hỏi sản phẩm khuyến mãi
+    steps:
+      - intent: chao_hoi
+      - action: utter_chao_hoi
+      - intent: hoi_san_pham_khuyen_mai
+      - action: action_get_active_offers
+      - intent: tam_biet
+      - action: utter_tam_biet
+
+  

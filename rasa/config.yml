@@ -1,0 +1,25 @@
+version: "3.1"  # Phiên bản của Rasa đang sử dụng. Cần đảm bảo rằng cấu hình này phù hợp với phiên bản của Rasa bạn đang chạy.
+language: "vi"  # Ngôn ngữ của mô hình. "vi" nghĩa là tiếng Việt.
+pipeline:  # Danh sách các thành phần trong pipeline xử lý đầu vào.
+- name: WhitespaceTokenizer    # Tokenizer sử dụng dấu cách để phân tách văn bản thành các token (từ). Đây là bước đầu tiên trong việc xử lý văn bản.
+- name: RegexFeaturizer    # Dùng các biểu thức chính quy để tạo các đặc trưng (features) từ văn bản.
+- name: LexicalSyntacticFeaturizer    # Dùng để tạo các đặc trưng từ cấu trúc ngữ pháp và từ vựng của văn bản.
+- name: CountVectorsFeaturizer    # Dùng để chuyển đổi văn bản thành vector đặc trưng sử dụng phương pháp bag-of-words (BoW).
+- name: CountVectorsFeaturizer    # Một lần nữa, tạo đặc trưng từ văn bản sử dụng bag-of-words, nhưng với tùy chọn `char_wb` (nghiên cứu các n-gram của ký tự).
+  analyzer: "char_wb"    # Phân tích văn bản theo n-gram ký tự (character n-gram) thay vì từ (word n-gram).
+  min_ngram: 1    # Chiều dài tối thiểu của n-gram (1 ký tự).
+  max_ngram: 4    # Chiều dài tối đa của n-gram (4 ký tự).
+- name: DIETClassifier    # Bộ phân loại sử dụng mô hình DIET (Dual Intent and Entity Transformer). Đây là mô hình chính để phân loại intent và nhận diện entity.
+  epochs: 50    # Số lượng epoch (vòng lặp huấn luyện) cho mô hình DIET. Số lượng epoch càng lớn thì mô hình càng học lâu, nhưng cũng có thể dẫn đến overfitting nếu không được điều chỉnh hợp lý.
+  constrain_similarities: true    # Bật tính năng hạn chế sự tương đồng giữa các intent tương tự, giúp mô hình phân biệt tốt hơn giữa các intent tương tự nhau.
+- name: EntitySynonymMapper    # Bộ chuyển đổi đồng nghĩa entity. Nếu một entity có nhiều cách diễn đạt, nó sẽ chuyển tất cả về một chuẩn.
+- name: FallbackClassifier    # Bộ phân loại dự phòng, giúp dự đoán intent mặc định khi mô hình không tự tin với kết quả phân loại.
+  threshold: 0.4    # Ngưỡng xác suất dưới mức này thì hành động fallback sẽ được thực thi. Nếu mô hình tự tin dưới 40%, sẽ thực hiện fallback.
+  ambiguity_threshold: 0.1    # Ngưỡng mơ hồ, chỉ định mức độ mơ hồ mà mô hình sẽ đánh giá là không chắc chắn để fallback. Nếu xác suất giữa các intent gần bằng nhau (chênh lệch dưới 10%), thì sẽ fallback.
+
+policies:  # Các chính sách quyết định hành vi của trợ lý ảo.
+- name: RulePolicy    # Chính sách quy tắc giúp mô hình đưa ra các quyết định dựa trên các quy tắc có sẵn.
+  core_fallback_action_name: "action_default_fallback"    # Tên hành động mặc định khi không có dự đoán intent chính xác (action fallback).
+  core_fallback_threshold: 0.4    # Ngưỡng xác suất để hành động fallback được kích hoạt. Nếu xác suất của intent dưới 40%, sẽ kích hoạt fallback.
+  enable_fallback_prediction: true    # Cho phép dự đoán fallback trong quá trình huấn luyện.
+assistant_id: 20241126-062135-kind-weapon

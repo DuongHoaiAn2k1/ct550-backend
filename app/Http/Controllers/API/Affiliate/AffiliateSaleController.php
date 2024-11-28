@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\API\Affiliate;
 
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\Commission;
 use Illuminate\Http\Request;
 use App\Models\AffiliateSale;
+use App\Models\AffiliateWithdrawal;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 
@@ -20,6 +22,40 @@ class AffiliateSaleController extends Controller
             'status' => 'success',
             'data' => $affiliateSales
         ]);
+    }
+
+    public function getListAffiliateOrderSale()
+    {
+        try {
+            $affiliateSales = AffiliateSale::with(
+                [
+                    'affiliateUser',
+                    'product',
+                    'order' => function ($query) {
+                        $query->where('status', 'delivered');
+                    },
+                    'order.orderDetail'
+
+                ]
+            )->get();
+
+            return response()->json(
+                [
+                    'status' => 'success',
+                    'message' => 'Get List Affiliate Sale SuccessFully',
+                    'data' => $affiliateSales
+                ],
+                200
+            );
+        } catch (\Exception $e) {
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => $e->getMessage()
+                ],
+                500
+            );
+        }
     }
 
     // Create a new affiliate sale
@@ -37,6 +73,14 @@ class AffiliateSaleController extends Controller
                 'status' => 'error',
                 'message' => $validator->messages()
             ], 422);
+        }
+
+        $existsProductCommision = Commission::where('product_id', $request->product_id)->first();
+        if (!$existsProductCommision) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Sản phẩm chưa được tạo hoa hồng'
+            ], 400);
         }
 
         try {
@@ -93,5 +137,53 @@ class AffiliateSaleController extends Controller
                 'message' => $e->getMessage()
             ], 500);
         }
+    }
+
+    function calculateAffiliateStatistics(Request $request)
+    {
+        $month = $request->month;
+        $year = $request->year;
+
+        // Tổng doanh thu từ chương trình tiếp thị
+        $totalRevenue = AffiliateSale::whereHas('order', function ($query) use ($month, $year) {
+            $query->where('status', 'delivered')
+                ->whereMonth('created_at', $month)
+                ->whereYear('created_at', $year);
+        })
+            ->get()
+            ->sum(function ($affiliateSale) {
+                $order = $affiliateSale->order;
+                return $order->total_cost - $order->shipping_fee;
+            });
+
+        // Tổng hoa hồng của người tiếp thị liên kết
+        $totalCommission = AffiliateSale::whereHas('order', function ($query) use ($month, $year) {
+            $query->where('status', 'delivered')
+                ->whereMonth('created_at', $month)
+                ->whereYear('created_at', $year);
+        })
+            ->sum('commission_amount');
+
+        // Tổng số tiền đã chuyển cho người tiếp thị
+        $totalWithdrawals = AffiliateWithdrawal::where('status', 'done')
+            ->whereMonth('created_at', $month)
+            ->whereYear('created_at', $year)
+            ->sum('amount');
+
+        // Tổng số đơn hàng
+        $totalOrders = AffiliateSale::whereHas('order', function ($query) use ($month, $year) {
+            $query->where('status', 'delivered')
+                ->whereMonth('created_at', $month)
+                ->whereYear('created_at', $year);
+        })
+            ->distinct('order_id') // Đảm bảo không tính trùng lặp đơn hàng
+            ->count('order_id');
+
+        return [
+            'total_revenue' => $totalRevenue,
+            'total_commission' => $totalCommission,
+            'total_withdrawals' => $totalWithdrawals,
+            'total_orders' => $totalOrders
+        ];
     }
 }

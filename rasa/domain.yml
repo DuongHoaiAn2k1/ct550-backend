@@ -1,0 +1,85 @@
+version: "3.1"
+intents:
+  - chao_hoi
+  - suc_khoe
+  - tam_biet
+  - xac_nhan
+  - phu_nhan
+  - hoi_san_pham
+  - hoi_danh_muc
+  - hoi_nhan_vien
+  - hoi_khong_co
+  - hoi_cach_mua_hang
+  - hoi_chuc_nang
+  - hoi_ban_la_ai
+  - hoi_toi_la_ai
+  - hoi_khuyen_mai
+  - hoi_san_pham_khuyen_mai
+  - hoi_san_pham_gia_cao_nhat
+  - hoi_san_pham_gia_thap_nhat
+
+entities:
+  - product
+
+slots:
+  product:
+    type: text
+    mappings:
+      - type: from_entity
+        entity: product
+
+responses:
+  utter_chao_hoi:
+    - text: "Chào bạn! Tôi có thể giúp gì cho bạn?"
+  
+  utter_suc_khoe:
+    - text: "Tôi khỏe. Cảm ơn bạn!"
+
+  utter_tam_biet:
+    - text: "Tạm biệt! Chúc bạn một ngày tốt lành!"
+
+  utter_xac_nhan:
+    - text: "Đúng vậy, bạn nói đúng."
+
+  utter_phu_nhan:
+    - text: "Rất tiếc, điều đó không chính xác."
+  
+  utter_hoi_san_pham:
+    - text: "Cửa hàng chúng tôi bán các sản phẩm đặc sản Mũi Cà Mau."
+
+  utter_no_categories:
+    - text: "Hiện tại không có danh mục sản phẩm nào."
+  
+  utter_default:
+    - text: "Xin lỗi, tôi không hiểu yêu cầu của bạn. Vui lòng đợi trong giây lát, chúng tôi sẽ chuyển bạn đến nhân viên hỗ trợ."
+
+  utter_hoi_nhan_vien:
+    - text: "Vui lòng đợi trong giây lát. Yêu cầu đã được chuyển đến nhân viên."
+  
+  utter_hoi_khong_co:
+    - text: "Xin lỗi, hiện tại cửa hàng không cung cấp các sản phẩm mà bạn yêu cầu ạ."
+  
+  utter_hoi_cach_mua_hang:
+    - text: "Bạn hãy truy cập đến vào website, sau đó lựa chọn sản phẩm phù hợp với bạn. Tiếp theo hãy thêm nó vào giỏ hàng và tiến hành đặt hàng. Nhớ chú ý điện thoại để nhận hàng bạn nhé!"
+
+  utter_hoi_chuc_nang:
+    - text: "Website cung cấp các chức năng cơ bản như: đặt hàng, thanh toán online, thêm sản phẩm vào giỏ hàng, tìm kiếm thông minh, sản phẩm yêu thích, đánh giá sau khi mua, tiếp thị liên kết,..."
+  
+  utter_hoi_ban_la_ai:
+    - text: "Tôi là một nhân viên hỗ trợ ảo. Giải đáp các thắc mắc của bạn khi mua hàng."
+  
+  utter_hoi_toi_la_ai:
+    - text: "Bạn là một khách hàng dễ thương. Hân hạnh được phục vụ bạn! ^^"
+  
+  utert_hoi_khuyen_mai:
+    - text: "Love u"
+
+  utter_hoi_san_pham_khuyen_mai:
+    - text: "love"
+actions:
+  - action_get_active_offers
+  - action_fetch_categories
+  - action_search_products
+  - action_show_active_promotions
+  - action_get_highest_priced_product
+  - action_get_lowest_priced_product

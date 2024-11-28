@@ -28,7 +28,7 @@ class OrderController extends Controller
     public function get($order_id)
     {
         try {
-            $order = Order::with('orderDetail.product')->where('order_id', $order_id)->first();
+            $order = Order::with('orderDetail.product')->with('orderDetail.orderDetailBatch')->where('order_id', $order_id)->first();
 
             return response()->json([
                 'status' => 'success',
@@ -561,14 +561,13 @@ class OrderController extends Controller
 
             $totalCostSum = 0;
             if ($request->status == 'delivered') {
-                $totalCostSum = Order::where('user_id', $order->user_id)->where('status', 'delivered')->sum('total_cost');
+                $totalCostSum = Order::where('user_id', $order->user_id)->where('status', operator: 'delivered')->sum('total_cost');
                 if ($totalCostSum >= 10000000) {
                     $user = User::where('id', $order->user_id)->first();
-                    $roles = $user->getRoleNames();
+                    $roles = $user->getRoleNames()->toArray();
                     if (!in_array('loyal_customer', $roles)) {
                         $user->removeRole('normal_user');
                         $user->assignRole('loyal_customer');
-
                         $notification = new Notification();
                         $notification->user_id = $order->user_id;
                         $notification->message = 'Chúc mừng bạn đã trở thành khách hàng thân thiết';

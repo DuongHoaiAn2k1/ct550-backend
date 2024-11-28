@@ -21,6 +21,7 @@ Route::prefix('/product')->group(function () {
     Route::patch('/{id}', [ProductController::class, 'updateQuantity']);
     Route::get('/review/list', [ProductController::class, 'getProductsWithReviews']);
     Route::post('/search-ai/query', [ProductController::class, 'searchAI']);
+    Route::get('/list/top-selling/all', [ProductController::class, 'getTopSellingProducts']);
 
     Route::prefix('/batch')->group(function () {
         Route::get('/list', [ProductBatchController::class, 'index']);
