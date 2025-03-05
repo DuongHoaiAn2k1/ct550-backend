@@ -480,6 +480,7 @@ nlu:
       - Sản phẩm nào có giá trị cao nhất?
       - Sản phẩm giá cao nhất là gì?
       - Hãy cho tôi biết sản phẩm có giá cao nhất
+      - Sản phẩm nào mắc nhất
 
   - intent: hoi_san_pham_gia_thap_nhat
     examples: |
@@ -488,3 +489,31 @@ nlu:
       - Sản phẩm nào có giá trị thấp nhất?
       - Sản phẩm giá thấp nhất là gì?
       - Hãy cho tôi biết sản phẩm có giá thấp nhất
+  
+  - intent: hoi_san_pham_ban_chay_nhat
+    examples: |
+      - Sản phẩm nào được mua nhiều nhất?
+      - Cho tôi biết sản phẩm bán chạy nhất
+      - Sản phẩm nào đang hot?
+      - Sản phẩm nào có số lượng bán lớn nhất?
+      - Mặc hàng nào bán chạy nhất
+      - Cái nào bán chạy nhất
+      - Cái nào đực mua nhiều nhất
+      - Sản phẩm nào bán chạy nhất
+
+  - intent: hoi_san_pham_yeu_thich
+    examples: |
+      - Sản phẩm nào được yêu thích nhất?
+      - Cho tôi biết sản phẩm được đánh giá cao nhất
+      - Sản phẩm nào có điểm trung bình cao nhất?
+      - Sản phẩm nào đang được yêu thích nhiều nhất?
+      - Mặc hàng nào được yêu thích nhất
+      - Cái nào được yêu thích nhất
+  
+  - intent: hoi_dinh_duong
+    examples: |
+      - Sản phẩm nào có nhiều dinh dưỡng
+      - Sản phẩm có nhiều dinh dưỡng không
+      - Sản phẩm nào có nhiều dinh dưỡng nhất
+      - Sản phẩm nào cung cấp nhiều dinh dưỡng
+      - Sản phẩm nào cung cấp nhiều dưỡng chất

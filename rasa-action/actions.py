@@ -323,6 +323,117 @@ class ActionGetLowestPricedProduct(Action):
             dispatcher.utter_message(text=f"Đã xảy ra lỗi khi truy vấn cơ sở dữ liệu: {str(e)}")
 
         return []
+    
+class ActionFetchMostBoughtProduct(Action):
+    def name(self) -> str:
+        return "action_fetch_most_bought_product"
+
+    async def run(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+        """Truy vấn sản phẩm được mua nhiều nhất và trả về thông tin theo định dạng giống ActionGetLowestPricedProduct"""
+        try:
+            # Kết nối cơ sở dữ liệu MySQL
+            conn = mysql.connector.connect(
+                host=os.getenv("DB_HOST"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                database=os.getenv("DB_NAME"),
+                port=os.getenv("DB_PORT"),
+            )
+            cursor = conn.cursor(dictionary=True)
+
+            # Truy vấn để lấy sản phẩm được mua nhiều nhất (sử dụng JOIN để kết hợp bảng order_detail và products)
+            query = """
+                SELECT p.product_id, p.product_name, SUM(od.quantity) AS total_quantity
+                FROM order_detail od
+                JOIN products p ON od.product_id = p.product_id
+                GROUP BY p.product_id
+                ORDER BY total_quantity DESC
+                LIMIT 1;
+            """
+            cursor.execute(query)
+            most_bought_product = cursor.fetchone()
+
+            # Khởi tạo phản hồi JSON
+            response_data = {"results": []}
+
+            if most_bought_product:
+                # Lấy thông tin sản phẩm
+                product_info = {
+                    "product_id": most_bought_product["product_id"],
+                    "product_name": most_bought_product["product_name"],
+                    "similarity": 4  # Similarity là 4 như yêu cầu
+                }
+                response_data["results"].append(product_info)
+            else:
+                response_data["results"] = []
+
+            # Gửi thông điệp JSON về cho người dùng
+            dispatcher.utter_message(json_message=response_data)
+
+            # Đóng kết nối cơ sở dữ liệu
+            cursor.close()
+            conn.close()
+
+        except Exception as e:
+            dispatcher.utter_message(text=f"Đã xảy ra lỗi khi truy vấn cơ sở dữ liệu: {str(e)}")
+
+        return []
+
+class ActionFetchMostLovedProduct(Action):
+    def name(self) -> str:
+        return "action_fetch_most_loved_product"
+
+    async def run(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+        """Truy vấn sản phẩm có điểm đánh giá trung bình cao nhất và trả về thông tin theo định dạng giống ActionGetLowestPricedProduct"""
+        try:
+            # Kết nối cơ sở dữ liệu MySQL
+            conn = mysql.connector.connect(
+                host=os.getenv("DB_HOST"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                database=os.getenv("DB_NAME"),
+                port=os.getenv("DB_PORT"),
+            )
+            cursor = conn.cursor(dictionary=True)
+
+            # Truy vấn để lấy sản phẩm có điểm đánh giá trung bình cao nhất
+            query = """
+                SELECT p.product_id, p.product_name, AVG(r.rating) AS average_rating
+                FROM reviews r
+                JOIN products p ON r.product_id = p.product_id
+                GROUP BY p.product_id
+                ORDER BY average_rating DESC
+                LIMIT 1;
+            """
+            cursor.execute(query)
+            most_loved_product = cursor.fetchone()
+
+            # Khởi tạo phản hồi JSON
+            response_data = {"results": []}
+
+            if most_loved_product:
+                # Lấy thông tin sản phẩm yêu thích nhất
+                product_info = {
+                    "product_id": most_loved_product["product_id"],
+                    "product_name": most_loved_product["product_name"],
+                    # "average_rating": most_loved_product["average_rating"],
+                    "similarity": 5 
+                }
+                response_data["results"].append(product_info)
+            else:
+                response_data["results"] = []
+
+            # Gửi thông điệp JSON về cho người dùng
+            dispatcher.utter_message(json_message=response_data)
+
+            # Đóng kết nối cơ sở dữ liệu
+            cursor.close()
+            conn.close()
+
+        except Exception as e:
+            dispatcher.utter_message(text=f"Đã xảy ra lỗi khi truy vấn cơ sở dữ liệu: {str(e)}")
+
+        return []
 
 
 if __name__ == "__main__":
@@ -335,9 +446,9 @@ if __name__ == "__main__":
     tracker = MockTracker()
 
     # Khởi tạo action
-    action = ActionShowActivePromotions()
+    # action = ActionShowActivePromotions()
 
-    action2 = ActionGetLowestPricedProduct()
+    action2 = ActionFetchMostLovedProduct()
 
     # Chạy thử action
     import asyncio

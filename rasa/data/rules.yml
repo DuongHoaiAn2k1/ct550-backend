@@ -80,4 +80,18 @@ rules:
       - intent: hoi_san_pham_gia_thap_nhat
       - action: action_get_lowest_priced_product
 
+  - rule: Hỏi sản phẩm bán chạy
+    steps:
+      - intent: hoi_san_pham_ban_chay_nhat
+      - action: action_fetch_most_bought_product
+
+  - rule: Hỏi sản phẩm yêu thích
+    steps:
+      - intent: hoi_san_pham_yeu_thich
+      - action: action_fetch_most_loved_product
+
+  - rule: Hỏi dinh dưỡng
+    steps:
+      - intent: hoi_dinh_duong
+      - action: utter_hoi_dinh_duong
 

@@ -17,6 +17,9 @@ intents:
   - hoi_san_pham_khuyen_mai
   - hoi_san_pham_gia_cao_nhat
   - hoi_san_pham_gia_thap_nhat
+  - hoi_san_pham_ban_chay_nhat
+  - hoi_san_pham_yeu_thich
+  - hoi_dinh_duong
 
 entities:
   - product
@@ -70,12 +73,10 @@ responses:
   
   utter_hoi_toi_la_ai:
     - text: "Bạn là một khách hàng dễ thương. Hân hạnh được phục vụ bạn! ^^"
-  
-  utert_hoi_khuyen_mai:
-    - text: "Love u"
 
-  utter_hoi_san_pham_khuyen_mai:
-    - text: "love"
+  utter_hoi_dinh_duong:
+    - text: "Sản phẩm nào trong cửa hàng cũng dồi dào dinh dưỡng như nhau."
+  
 actions:
   - action_get_active_offers
   - action_fetch_categories
@@ -83,3 +84,5 @@ actions:
   - action_show_active_promotions
   - action_get_highest_priced_product
   - action_get_lowest_priced_product
+  - action_fetch_most_bought_product 
+  - action_fetch_most_loved_product

@@ -126,4 +126,25 @@ stories:
       - intent: tam_biet
       - action: utter_tam_biet
 
+  - story: user asks for most loved product
+    steps:
+      - intent: hoi_san_pham_yeu_thich
+      - action: action_fetch_most_loved_product
+
+  - story: Hỏi sản phẩm bán chạy nhất
+    steps:
+      - intent: chao_hoi
+      - action: utter_chao_hoi
+      - intent: hoi_san_pham_ban_chay_nhat
+      - action: action_fetch_most_bought_product
+      - intent: tam_biet
+      - action: utter_tam_biet
   
+  - story: Hỏi dinh dưỡng
+    steps:
+      - intent: chao_hoi
+      - action: utter_chao_hoi
+      - intent: hoi_dinh_duong
+      - action: utter_hoi_dinh_duong
+      - intent: tam_biet
+      - action: utter_tam_biet

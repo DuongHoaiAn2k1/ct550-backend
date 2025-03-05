@@ -18,3 +18,9 @@ yarn-error.log
 /.idea
 /.vscode
 ct466_database.sql
+rasa/__pycache__
+rasa/.config
+rasa/.keras
+rasa/.rasa
+rasa-action/__pycache__
+.composer

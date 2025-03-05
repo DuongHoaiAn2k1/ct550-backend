@@ -352,6 +352,16 @@ class MessageController extends Controller
                         $messageCustome = 'Sản phẩm có giá thấp nhất là'; // Thay đổi thông điệp nếu similarity = 2
                         break;
                     }
+
+                    if ($product['similarity'] == 4) {
+                        $messageCustome = 'Sản phẩm bán chạy nhất là';
+                        break;
+                    }
+
+                    if ($product['similarity'] == 5) {
+                        $messageCustome = 'Sản phẩm yêu thích nhất là';
+                        break;
+                    }
                 }
 
                 if (empty($filteredProducts)) {

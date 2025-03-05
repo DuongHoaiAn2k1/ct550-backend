@@ -90,12 +90,19 @@ async def search(query: SearchQuery):
     # Chuyển truy vấn thành ma trận TF-IDF
     query_tfidf = vectorizer.transform([query_text])
 
-     # Tính toán độ tương đồng cosine
+    # Tính toán độ tương đồng cosine
     similarities = cosine_similarity(query_tfidf, tfidf_matrix).flatten()
 
-    # Lấy 5 sản phẩm có độ tương đồng cao nhất
-    n = 5
-    top_indices = similarities.argsort()[-n:][::-1]
+    # Lọc các sản phẩm có độ tương đồng lớn hơn 0.3
+    filtered_indices = [i for i, sim in enumerate(similarities) if sim > 0.15]
+
+    # Nếu không có sản phẩm nào đạt yêu cầu
+    if not filtered_indices:
+        return []
+
+    # Lấy tối đa 5 sản phẩm có độ tương đồng cao nhất
+    n = min(5, len(filtered_indices))
+    top_indices = sorted(filtered_indices, key=lambda i: similarities[i], reverse=True)[:n]
 
     # Chuẩn bị kết quả trả về
     results = [{"product_id": products[i]["product_id"], 
@@ -104,12 +111,10 @@ async def search(query: SearchQuery):
                 "similarity": similarities[i]} 
                for i in top_indices]
 
-    if not results or max(similarities) == 0:
-        return {"message": "No matching products found"}
-
     return results
 
-@app.post("/api/search/all") 
+
+@app.post("/api/search/all")
 async def search_all(query: SearchQuery):
     products = fetch_products()
     if not products:
@@ -127,12 +132,22 @@ async def search_all(query: SearchQuery):
     # Tính toán độ tương đồng cosine
     similarities = cosine_similarity(query_tfidf, tfidf_matrix).flatten()
 
-    # Lấy 10 sản phẩm có độ tương đồng cao nhất
-    n = 10
-    top_indices = similarities.argsort()[-n:][::-1] 
+    # Lọc các sản phẩm có độ tương đồng > 0.3
+    filtered_indices = [i for i, similarity in enumerate(similarities) if similarity > 0.15]
 
-     # Chuẩn bị kết quả trả về
-    results = [{"product_id": products[i]["product_id"], 
-                "similarity": similarities[i]} 
-               for i in top_indices]
+    # Sắp xếp theo thứ tự độ tương đồng giảm dần và lấy tối đa 10 sản phẩm
+    top_indices = sorted(filtered_indices, key=lambda i: similarities[i], reverse=True)[:10]
+
+    # Chuẩn bị kết quả trả về
+    results = [
+        {
+            "product_id": products[i]["product_id"], 
+            "similarity": similarities[i]
+        } 
+        for i in top_indices
+    ]
+    
+    if not results:
+        return {"error": "No products found with similarity above 0.3"}
+
     return results

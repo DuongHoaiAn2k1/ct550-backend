@@ -293,7 +293,7 @@ class StatisticController extends Controller
 
 
                 // Lợi nhuận = Doanh thu - Giá vốn
-                $monthlyProfit[$month] = $totalRevenue - $totalCost;
+                $monthlyProfit[$month] = ceil($totalRevenue - $totalCost);
             }
 
             // Trả về dữ liệu lợi nhuận từng tháng
@@ -477,7 +477,7 @@ class StatisticController extends Controller
             }
 
             // Tính tổng lợi nhuận = Doanh thu - Giá vốn
-            $totalProfit = $totalRevenue - $totalCost;
+            $totalProfit = ceil($totalRevenue - $totalCost);
 
             // Trả về kết quả dưới dạng JSON
             return response()->json([

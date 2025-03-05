@@ -48,7 +48,7 @@
         <h2>Xin chào khách hàng #{{ $customerName  }}</h2>
         <p>Cảm ơn Quý Khách đã tin tưởng và đặt hàng tại website chúng tôi!</p>
         <p><strong>Thông tin đơn hàng:</strong></p>
-        <p><strong>Mã đơn hàng:</strong> #{{ $order->bill_id }}</p>
+        <p><strong>Mã đơn hàng:</strong> {{ $order->bill_id }}</p>
         <p><strong>Ngày đặt hàng:</strong> {{ $orderDate }}</p>
         <p><strong>Tiền ship:</strong> {{ number_format($shippingFee, 0, ',', '.') }} VND</p>
         <p class="total-cost"><strong>Tổng tiền:</strong> {{ number_format($totalCost, 0, ',', '.') }} VND</p>

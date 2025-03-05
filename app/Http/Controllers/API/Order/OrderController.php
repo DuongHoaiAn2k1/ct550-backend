@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Events\Order\OrderUpdateStatus;
 use Illuminate\Support\Facades\Validator;
 use App\Events\Order\PaymentSetPrepareStatus;
+use App\Events\Affiliate\AffiliateWithdrawalSent;
 use App\Http\Controllers\API\Notification\NotificationController;
 
 class OrderController extends Controller
@@ -547,6 +548,7 @@ class OrderController extends Controller
                     $affiliateSale->save();
                     $affiliateWallet->balance += $affiliateSale->commission_amount;
                     $affiliateWallet->save();
+                    event(new AffiliateWithdrawalSent());
                 } else {
                     $affiliateSale->order_status = 'pending';
                     $affiliateSale->save();
